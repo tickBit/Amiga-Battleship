@@ -627,9 +627,7 @@ void startPrg()
                                             
                                             AImove();
 
-                                            //printf("AI's max error: %d\n", error);
                                         }
-                                        //printBoard();
                                     }
 
                                     break;
@@ -1107,12 +1105,12 @@ void placeComputersShips() {
         rotateShip(compShip, 3, i);
     }
     
-    x = (rand() * 100) % 12 + 3;
-    y = (rand() * 100) % 12 + 3;
+    x = (rand() * 11337799) % 13;
+    y = (rand() * 11337799) % 13;
 
     while (!areaClear(compShip, x, y, 3)) {
-        x = (rand() * 12345678) % 12 + 3;
-        y = (rand() * 12345678) % 12 + 3;
+        x = (rand() * 12345678) % 13;
+        y = (rand() * 12345678) % 13;
     }
 
     for (j = 0; j < 3; j++) {
@@ -1131,12 +1129,12 @@ void placeComputersShips() {
     }
     
 
-    x = (rand() * 100) % 12;
-    y = (rand() * 100) % 12;
+    x = (rand() * 11337799) % 14;
+    y = (rand() * 11337799) % 14;
 
     while (!areaClear(compShip, x, y, 3)) {
-        x = (rand() * 100) % 12;
-        y = (rand() * 100) % 12;
+        x = (rand() * 11337799) % 14;
+        y = (rand() * 11337799) % 14;
     }
 
     
@@ -1150,12 +1148,12 @@ void placeComputersShips() {
 
     compShip = &ship3;
 
-    x = (rand() * 100) % 13;
-    y = (rand() * 100) % 13;
+    x = (rand() * 11337799) % 12;
+    y = (rand() * 11337799) % 12;
 
     while (!areaClear(compShip, x, y, 2)) {
-        x = (rand() * 100) % 12;
-        y = (rand() * 100) % 12;
+        x = (rand() * 11337799) % 12;
+        y = (rand() * 11337799) % 12;
     }
 
     for (j = 0; j < 2; j++) {
@@ -1174,12 +1172,12 @@ void placeComputersShips() {
         rotateShip(compShip, 4, i);
     }
 
-    x = (rand() * 100) % 11;
-    y = (rand() * 100) % 11;
+    x = (rand() * 11337799) % 12;
+    y = (rand() * 11337799) % 12;
 
     while (!areaClear(compShip, x, y, 4)) {
-        x = (rand() * 100) % 12;
-        y = (rand() * 100) % 12;
+        x = (rand() * 11337799) % 12;
+        y = (rand() * 11337799) % 12;
     }
 
     for (j = 0; j < 4; j++) {
@@ -1198,12 +1196,12 @@ void placeComputersShips() {
         rotateShip(compShip, 5, i);
     }
 
-    x = (rand() * 100) % 10;
-    y = (rand() * 100) % 10;
+    x = (rand() * 11337799) % 11;
+    y = (rand() * 11337799) % 11;
 
     while (!areaClear(compShip, x, y, 5)) {
-        x = (rand() * 100) % 12;
-        y = (rand() * 100) % 12;
+        x = (rand() * 11337799) % 11;
+        y = (rand() * 11337799) % 11;
     }
 
     for (j = 0; j < 5; j++) {
