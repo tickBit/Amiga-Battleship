@@ -7,6 +7,8 @@ More info in the source code.
 
 In the LhA archive there are Amiga executable and info (icon) file for the executable and also the graphics.
 
+Sorry about the typo in the earlier commit messages. I meant of course "First commit"...
+
 ## Picture
 
 ![battleship](https://github.com/user-attachments/assets/dda534e7-5f5f-4d0e-9887-93ce49e793a5)
