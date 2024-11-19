@@ -1129,12 +1129,12 @@ void placeComputersShips() {
     }
     
 
-    x = (rand() * 11337799) % 14;
-    y = (rand() * 11337799) % 14;
+    x = (rand() * 11337799) % 13;
+    y = (rand() * 11337799) % 13;
 
     while (!areaClear(compShip, x, y, 3)) {
-        x = (rand() * 11337799) % 14;
-        y = (rand() * 11337799) % 14;
+        x = (rand() * 11337799) % 13;
+        y = (rand() * 11337799) % 13;
     }
 
     
@@ -1148,12 +1148,12 @@ void placeComputersShips() {
 
     compShip = &ship3;
 
-    x = (rand() * 11337799) % 12;
-    y = (rand() * 11337799) % 12;
+    x = (rand() * 11337799) % 14;
+    y = (rand() * 11337799) % 14;
 
     while (!areaClear(compShip, x, y, 2)) {
-        x = (rand() * 11337799) % 12;
-        y = (rand() * 11337799) % 12;
+        x = (rand() * 11337799) % 14;
+        y = (rand() * 11337799) % 14;
     }
 
     for (j = 0; j < 2; j++) {
