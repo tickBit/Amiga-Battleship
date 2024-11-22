@@ -1,7 +1,7 @@
 /*
     Battle ship game for Amiga a'la spaghetti...
 
-    Version 1.0.0
+    Version 1.1.0
 
     IMPORTANT:
 
@@ -51,9 +51,10 @@
 #define PDTA_DestMode		(DTA_Dummy + 251)
 #define PMODE_V43 (1)	/* Extended mode */
 
-#define PLACE_SHIPS     0
-#define PLAY            1
-#define GAME_OVER       2
+#define START_SCREEN    0
+#define PLACE_SHIPS     1
+#define PLAY            2
+#define GAME_OVER       3
 
 int state;
 
@@ -95,7 +96,7 @@ struct TextAttr Topaz120 = { "topaz.font", 12, 0, 0, };
 struct TextAttr myta = {"CGTimes.font", 72, 0, 0};
 struct TextFont *myfont, *myfont2;
 
-struct Gadget    *glist, *gads[2];
+struct Gadget    *glist, *gads[3];
 struct NewGadget ng;
 void             *vi;
 
@@ -113,74 +114,7 @@ BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 int AIHits = 0;
 int plyHits = 0;
 
-int rotateShip(int *ship, int length, int nr) {
 
-    int rotatedShip[length*length];
-
-    angle_+=1;
-    if (angle_ == 5) {
-        angle_ = 1;
-        initShip(nr);
-    }
-
-    switch (angle_) {
-        case 1:
-
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[(length-i-1)+j*length] == 1) rotatedShip[i*length + j] = 1; else rotatedShip[i*length+j] = 0;
-                }
-            }
-            break;
-
-        case 2:
-
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[i + j*length] == 1) rotatedShip[j + (length-i-1)*length] = 1; else rotatedShip[j + (length-i-1)*length] = 0;
-                }
-            }
-
-            break;
-        case 3:
-            
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[(length-i-1) +(length-j-1)*length] == 1) rotatedShip[i*length + (length-j-1)] = 1; else rotatedShip[i*length + (length-j-1)] = 0;
-                }
-            }
-            break;
-
-        case 4:
-       
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[i + j*length] == 1) rotatedShip[(length-i-1)*length + j] = 1; else rotatedShip[(length-i-1)*length + j] = 0;
-                }
-            }
-            
-            break;
-
-    }
-
-    /* print ship */
-    /*
-    printf("\n")
-    for (int j = 0; j < length; j++) {
-        for (int i = 0; i < length; i++) {
-            if (rotatedShip[i + j*length] == 1) printf("1"); else printf("0");
-        }
-        printf("\n");
-    }
-    */
-
-    for (int j = 0; j < length; j++) {
-        for (int i = 0; i < length; i++) {
-            ship[i + j*length] = rotatedShip[i + j*length];
-        }
-    }
-    
-}
 
 void startPrg()
 {
@@ -189,11 +123,11 @@ void startPrg()
     struct TextFont *font;
     struct IntuiMessage *Message; 
     struct InputEvent *ie;
+    BOOL Done;
 
     char name[] = "gfx/background.jpg";
 
     struct Screen *scr = LockPubScreen("Workbench");
-
     glist = NULL;
 
     srand(time(NULL));
@@ -297,7 +231,7 @@ void startPrg()
 
 			        ULONG MsgClass;
 			        UWORD MsgCode;
-			        BOOL Done;
+			        
                     BOOL allPlaced;
 
                     Done = FALSE;
@@ -307,7 +241,7 @@ void startPrg()
 
                     int x, y;
 
-                    state = PLACE_SHIPS;
+                    state = START_SCREEN;
                     
                     /*
                     *  Main event loop
@@ -316,12 +250,31 @@ void startPrg()
                     {
                         
                         BltBitMapRastPort(bm, 0, 0, &rastport, 0, 0, bmhd->bmh_Width, bmhd->bmh_Height, 192);
-                        drawGrid(rastport);
-                        drawShips(rastport);
-                        drawBoard(rastport);
+                        
+                        if (state == START_SCREEN) {
+                            SetAPen(&rastport, 55);
+                            SetFont(&rastport, myfont);
+                            Move(&rastport, (800-TextLength(&rastport, "Battleship", 10)) / 2, win->BorderTop+MARGIN);
+                            Text(&rastport, "Battleship", 10);
+
+                            SetFont(&rastport, myfont2);
+                            SetAPen(&rastport, 41);
+                            Move(&rastport, (800-TextLength(&rastport, "Version 1.1.0", 13)) / 2, win->BorderTop+MARGIN + 40);
+                            Text(&rastport, "Version 1.1.0", 13);
+
+                            Move(&rastport, (800-TextLength(&rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80);
+                            Text(&rastport, "Click anywhere in the window to continue", 40);
+                        }
+
+                        if (state != START_SCREEN) {
+                            drawGrid(rastport);
+                            drawShips(rastport);
+                            drawBoard(rastport);
+                        }
 
                         if (state == PLACE_SHIPS) {
                             SetAPen(&rastport, 66);
+                            SetFont(&rastport, myfont);
                             Move(&rastport, 32, MARGIN + 32*16+128);
                             Text(&rastport, "Positioning of ships", 20);
                         }
@@ -452,6 +405,11 @@ void startPrg()
 
                                     // grab ship 1 with left mousebutton 
                                     if (MsgCode == 232) {
+
+                                        if (state == START_SCREEN) {
+                                            state = PLACE_SHIPS;
+                                            break;
+                                        }
 
                                         x = Message->MouseX - win->BorderLeft - MARGIN;
                                         y = Message->MouseY - win->BorderTop - MARGIN;
@@ -710,7 +668,7 @@ void startPrg()
                         
                         
                         ClipBlit(&rastport, 0, 0, win->RPort, win->BorderLeft, win->BorderTop, bmhd->bmh_Width, bmhd->bmh_Height, 192);
-                        RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
+                        if (state != START_SCREEN) RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
 
 
                         WaitTOF();
@@ -1247,4 +1205,73 @@ void undoCurrentPositioning() {
 
     shipsPlaced[undoShip-1] = FALSE;
 
+}
+
+int rotateShip(int *ship, int length, int nr) {
+
+    int rotatedShip[length*length];
+
+    angle_+=1;
+    if (angle_ == 5) {
+        angle_ = 1;
+        initShip(nr);
+    }
+
+    switch (angle_) {
+        case 1:
+
+            for (int j = 0; j < length; j++) {
+                for (int i = 0; i < length; i++) {
+                    if (ship[(length-i-1)+j*length] == 1) rotatedShip[i*length + j] = 1; else rotatedShip[i*length+j] = 0;
+                }
+            }
+            break;
+
+        case 2:
+
+            for (int j = 0; j < length; j++) {
+                for (int i = 0; i < length; i++) {
+                    if (ship[i + j*length] == 1) rotatedShip[j + (length-i-1)*length] = 1; else rotatedShip[j + (length-i-1)*length] = 0;
+                }
+            }
+
+            break;
+        case 3:
+            
+            for (int j = 0; j < length; j++) {
+                for (int i = 0; i < length; i++) {
+                    if (ship[(length-i-1) +(length-j-1)*length] == 1) rotatedShip[i*length + (length-j-1)] = 1; else rotatedShip[i*length + (length-j-1)] = 0;
+                }
+            }
+            break;
+
+        case 4:
+       
+            for (int j = 0; j < length; j++) {
+                for (int i = 0; i < length; i++) {
+                    if (ship[i + j*length] == 1) rotatedShip[(length-i-1)*length + j] = 1; else rotatedShip[(length-i-1)*length + j] = 0;
+                }
+            }
+            
+            break;
+
+    }
+
+    /* print ship */
+    /*
+    printf("\n")
+    for (int j = 0; j < length; j++) {
+        for (int i = 0; i < length; i++) {
+            if (rotatedShip[i + j*length] == 1) printf("1"); else printf("0");
+        }
+        printf("\n");
+    }
+    */
+
+    for (int j = 0; j < length; j++) {
+        for (int i = 0; i < length; i++) {
+            ship[i + j*length] = rotatedShip[i + j*length];
+        }
+    }
+    
 }
