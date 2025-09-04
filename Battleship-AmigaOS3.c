@@ -39,11 +39,18 @@
 #include <clib/dos_protos.h>
 #include <clib/gadtools_protos.h>
 
+
+#include <clib/macros.h>
+
 #define PLAY_BUTTON     (0)
 #define UNDO_BUTTON     (1)
 #define NEWGAME_BUTTON  (2)
 
 #define MARGIN 32
+
+#define WIN_TOP 0
+#define WIN_LEFT 80
+
 /*
     Below should be found from include files, but just in case...
 */
@@ -64,8 +71,6 @@ struct Library *UtilityBase = NULL;
 struct Library *GfxBase = NULL;
 struct Library *GadToolsBase = NULL;
 struct Library *DiskfontBase = NULL;
-
-struct BitMap *bitmap = NULL;
 
 struct Window *win = NULL;
 
@@ -100,6 +105,8 @@ struct Gadget    *glist, *gads[3];
 struct NewGadget ng;
 void             *vi;
 
+static WORD borderTop;
+
 struct EasyStruct myES =
 {
     sizeof(struct EasyStruct),
@@ -109,17 +116,70 @@ struct EasyStruct myES =
     "Ok",
 };
 
+struct BackFillInfo
+{
+	struct Hook            Hook;
+	struct Screen         *Screen;
+	Object                *PictureObject;
+	struct BitMapHeader   *BitMapHeader;
+	struct BitMap         *BitMap;
+	WORD                   CopyWidth;
+	WORD                   CopyHeight;
+};
+
+struct BackFillMsg
+{
+	struct Layer    *Layer;
+	struct Rectangle Bounds;
+	LONG             OffsetX;
+	LONG             OffsetY;
+};
+
 BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 
 int AIHits = 0;
 int plyHits = 0;
 
+struct BackFillInfo BF1, *Backfill;
+
+// this seems to be a bug (or feature) in SAS/C: -6%5 gives -1 instead of 4
+#define MOD(x,y) ((x)<0 ? (y)-((-(x))%(y)) : (x)%(y))
+
+#define RECTSIZEX(r) ((r)->MaxX-(r)->MinX+1)
+#define RECTSIZEY(r) ((r)->MaxY-(r)->MinY+1)
+
+// these settings might ONLY work with VBCC compiler!
+void __saveds MyBackfillFunc(
+    __reg("a0") struct Hook *Hook,
+    __reg("a2") struct RastPort *rp,
+    __reg("a1") struct BackFillMessage *msg)
+
+{
+
+    
+    struct BackFillInfo *bfi = (struct BackFillInfo *)Hook->h_Data;
+
+    if (bfi == NULL || bfi->BitMap == NULL) return;
+	
+
+    int dx = (rp->Layer->Width  - bfi->BitMapHeader->bmh_Width)  / 2;
+    int dy = (rp->Layer->Height + borderTop - bfi->BitMapHeader->bmh_Height) / 2;
+
+
+    BltBitMapRastPort(bfi->BitMap,
+                  0, 0,
+                  rp,
+                  dx, dy,
+                  800, 800,
+                  0xC0);
+
+}
 
 
 void startPrg()
 {
     int width, height;
-    struct RastPort rastport;
+    struct RastPort *rastport;
     struct TextFont *font;
     struct IntuiMessage *Message; 
     struct InputEvent *ie;
@@ -130,32 +190,14 @@ void startPrg()
     struct Screen *scr = LockPubScreen("Workbench");
     glist = NULL;
 
+    borderTop = scr->FirstWindow->BorderTop;
+
+    LONG Depth;
+    
     srand(time(NULL));
 
     if ( (vi = GetVisualInfo(scr, TAG_END)) != NULL )
     {
-    Object *Item = NewDTObject (name,
-	    DTA_GroupID, GID_PICTURE,
-	    PDTA_Remap, TRUE,
-        PDTA_Screen, scr,
-		PDTA_DestMode, PMODE_V43,
-	    TAG_END);
-
-		if (Item)
-			{
-			struct BitMapHeader *bmhd = NULL;
-			struct BitMap *bm = NULL;
-
-            int mx, my;
-
-			DoMethod (Item, DTM_PROCLAYOUT, NULL, TRUE);
-
-			GetDTAttrs (Item,
-				PDTA_BitMapHeader, &bmhd,
-				PDTA_DestBitMap, &bm,
-				TAG_END);
-
-			if (bmhd && bm) {
         
         struct Gadget *gad;
 
@@ -198,22 +240,37 @@ void startPrg()
 
         if (gad != NULL) {
 
+            Backfill = &BF1;
+			memset(Backfill,0,sizeof(*Backfill));
+
+			Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
+
+            Backfill->Hook.h_Data = Backfill;
+
+            if (LoadPicture(Backfill, name))
+            {
 				win = OpenWindowTags (NULL,
 					WA_Title, "Battle ship game for AmigaOS 3",
-					WA_InnerWidth, bmhd->bmh_Width,
-					WA_InnerHeight, bmhd->bmh_Height,
+                    WA_Top, WIN_TOP,
+                    WA_Left, WIN_LEFT,
+					WA_InnerWidth, 800,
+					WA_InnerHeight, 800,
                     WA_ReportMouse, TRUE,
                     WA_RMBTrap, TRUE,
                     WA_Gadgets, glist,
                     WA_SmartRefresh, TRUE,
                     WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
-                    WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | GADGETUP, TAG_END);
+                    WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | GADGETUP,
+                    WA_BackFill, &Backfill->Hook,
+                    TAG_END);
 
 				if (win) {
 
-                    bitmap = (struct BitMap *)AllocBitMap(bmhd->bmh_Width,bmhd->bmh_Height,bmhd->bmh_Depth,BMF_CLEAR | BMF_DISPLAYABLE,win->RPort->BitMap);
-                    InitRastPort(&rastport);
-                    rastport.BitMap = bitmap;
+                    //bitmap = (struct BitMap *)AllocBitMap(bmhd->bmh_Width,bmhd->bmh_Height,bmhd->bmh_Depth,BMF_CLEAR | BMF_DISPLAYABLE,win->RPort->BitMap);
+                    //InitRastPort(&rastport);
+                    //rastport.BitMap = bitmap;
+
+                    rastport = win->RPort;
 
                     GT_RefreshWindow(win, NULL);
 
@@ -224,9 +281,12 @@ void startPrg()
 
                     myfont2 = (struct TextFont*)OpenFont(&Topaz120);
 
-                    SetFont(&rastport, myfont);
-                    SetDrMd(&rastport,0);
-
+                    
+                    
+                    SetFont(rastport, myfont);
+                    SetDrMd(rastport,0);
+                    
+                    
                     struct Gadget *gadEvent;
 
 			        ULONG MsgClass;
@@ -236,34 +296,33 @@ void startPrg()
 
                     Done = FALSE;
 
-                    int winWidth = bmhd->bmh_Width + win->BorderLeft + win->BorderRight + 100;
-                    int winHeight = bmhd->bmh_Width + win->BorderBottom + win->BorderTop;
-
-                    int x, y;
+                    int x, y, mx, my;
 
                     state = START_SCREEN;
                     
+                    printf("START_SCREEN\n");
+
                     /*
                     *  Main event loop
                     */
                     do
                     {
-                        
-                        BltBitMapRastPort(bm, 0, 0, &rastport, 0, 0, bmhd->bmh_Width, bmhd->bmh_Height, 192);
-                        
+                                                
                         if (state == START_SCREEN) {
-                            SetAPen(&rastport, 55);
-                            SetFont(&rastport, myfont);
-                            Move(&rastport, (800-TextLength(&rastport, "Battleship", 10)) / 2, win->BorderTop+MARGIN);
-                            Text(&rastport, "Battleship", 10);
+                        
+                            SetAPen(rastport, 55);
+                            SetFont(rastport, myfont);
+                            Move(rastport, (800-TextLength(rastport, "Battleship", 10)) / 2, win->BorderTop+MARGIN + borderTop);
+                            Text(rastport, "Battleship", 10);
 
-                            SetFont(&rastport, myfont2);
-                            SetAPen(&rastport, 41);
-                            Move(&rastport, (800-TextLength(&rastport, "Version 1.1.0", 13)) / 2, win->BorderTop+MARGIN + 40);
-                            Text(&rastport, "Version 1.1.0", 13);
+                            SetFont(rastport, myfont2);
+                            SetAPen(rastport, 41);
+                            Move(rastport, (800-TextLength(rastport, "Version 1.1.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                            Text(rastport, "Version 1.1.0", 13);
 
-                            Move(&rastport, (800-TextLength(&rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80);
-                            Text(&rastport, "Click anywhere in the window to continue", 40);
+                            Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
+                            Text(rastport, "Click anywhere in the window to continue", 40);
+                        
                         }
 
                         if (state != START_SCREEN) {
@@ -273,45 +332,45 @@ void startPrg()
                         }
 
                         if (state == PLACE_SHIPS) {
-                            SetAPen(&rastport, 66);
-                            SetFont(&rastport, myfont);
-                            Move(&rastport, 32, MARGIN + 32*16+128);
-                            Text(&rastport, "Positioning of ships", 20);
+                            SetAPen(rastport, 66);
+                            SetFont(rastport, myfont);
+                            Move(rastport, 32, MARGIN + 32*16+128);
+                            Text(rastport, "Positioning of ships", 20);
                         }
 
                         if (state == PLAY) {
-                            SetFont(&rastport, myfont);
-                            SetAPen(&rastport, 66);
-                            Move(&rastport, 128, MARGIN+ 32*16+128);
-                            Text(&rastport, "Game on!", 8);
+                            SetFont(rastport, myfont);
+                            SetAPen(rastport, 66);
+                            Move(rastport, 128, MARGIN+ 32*16+128);
+                            Text(rastport, "Game on!", 8);
 
-                            SetFont(&rastport, myfont2);
+                            SetFont(rastport, myfont2);
                             
-                            SetAPen(&rastport, 84);
-                            RectFill(&rastport, 32, MARGIN + 32*16+160-16, 32+32, MARGIN + 32*16+160+32-16);
-                            SetAPen(&rastport, 66);
-                            Move(&rastport, 32+68, MARGIN + 32*16+160);
-                            Text(&rastport, "Human player has hit AI's ship", 30);
+                            SetAPen(rastport, 84);
+                            RectFill(rastport, 32, MARGIN + 32*16+160-16, 32+32, MARGIN + 32*16+160+32-16);
+                            SetAPen(rastport, 66);
+                            Move(rastport, 32+68, MARGIN + 32*16+160);
+                            Text(rastport, "Human player has hit AI's ship", 30);
 
-                            SetAPen(&rastport, 83);
-                            RectFill(&rastport, 32, MARGIN + 32*16+180, 32+32, MARGIN + 32*16+180+32);
-                            SetAPen(&rastport, 66);
-                            Move(&rastport, 32+68, MARGIN + 32*16+180+16);
-                            Text(&rastport, "Human player has missed AI's ship", 33);
+                            SetAPen(rastport, 83);
+                            RectFill(rastport, 32, MARGIN + 32*16+180, 32+32, MARGIN + 32*16+180+32);
+                            SetAPen(rastport, 66);
+                            Move(rastport, 32+68, MARGIN + 32*16+180+16);
+                            Text(rastport, "Human player has missed AI's ship", 33);
                         }
                         if (AIHits == 23 || plyHits == 23) state = GAME_OVER;
                         
                         if (state == GAME_OVER) {
-                            SetFont(&rastport, myfont);
-                            SetAPen(&rastport, 99);
-                            Move(&rastport, 32, MARGIN + 32*16+128+88);
+                            SetFont(rastport, myfont);
+                            SetAPen(rastport, 99);
+                            Move(rastport, 32, MARGIN + 32*16+128+88);
                             if (AIHits == 23) {
-                                SetAPen(&rastport, 62);
-                                Text(&rastport, "GAME OVER - I WON ;-)", 21);
+                                SetAPen(rastport, 62);
+                                Text(rastport, "GAME OVER - I WON ;-)", 21);
                             } else {
                                 if (plyHits == 23) {
-                                    SetAPen(&rastport, 83);
-                                    Text(&rastport, "Congratulations! You won!", 25);
+                                    SetAPen(rastport, 83);
+                                    Text(rastport, "Congratulations! You won!", 25);
                                 }
                             }
                         }
@@ -327,6 +386,7 @@ void startPrg()
                                 
                                 case IDCMP_GADGETUP:
                                     gadEvent = (struct Gadget *)Message->IAddress;
+
 
                                     switch (gadEvent->GadgetID) {
 
@@ -365,6 +425,9 @@ void startPrg()
                                             break;
                                     
                                     }
+
+                                    
+
                                     break;
 
                                 case IDCMP_MOUSEBUTTONS:
@@ -407,6 +470,13 @@ void startPrg()
                                     if (MsgCode == 232) {
 
                                         if (state == START_SCREEN) {
+                                            BltBitMapRastPort(Backfill->BitMap,
+                                        0, 0,
+                                        rastport,
+                                        win->BorderLeft, win->BorderTop,
+                                        800, 800,
+                                        0xC0);
+
                                             state = PLACE_SHIPS;
                                             break;
                                         }
@@ -602,19 +672,19 @@ void startPrg()
                                     break;
                             }               
 
-                    } if (Message != NULL)
-                        GT_ReplyIMsg((struct Message *)Message);
+                        } if (Message != NULL)
+                            GT_ReplyIMsg((struct Message *)Message);
 
-                        if (shipSelected != 0 && state == PLACE_SHIPS) {
-                            SetAPen(&rastport, 29);
+                            if (shipSelected != 0 && state == PLACE_SHIPS) {
+                                SetAPen(rastport, 29);
 
-                            switch (shipSelected) {
+                                switch (shipSelected) {
                                 case 1:
 
                                     for (int j = 0; j < 3; j++) {
                                         for (int i = 0; i < 3; i++) {
                                             if (ship1[i+j*3] == 1) {
-                                                RectFill(&rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
+                                                RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
                                     }
@@ -625,7 +695,7 @@ void startPrg()
                                     for (int j = 0; j < 3; j++) {
                                         for (int i = 0; i < 3; i++) {
                                             if (ship2[i+j*3] == 1) {
-                                                RectFill(&rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
+                                                RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
                                     }
@@ -636,7 +706,7 @@ void startPrg()
                                     for (int j = 0; j < 2; j++) {
                                         for (int i = 0; i < 2; i++) {
                                             if (ship3[i+j*2] == 1) {
-                                                RectFill(&rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
+                                                RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
                                     }
@@ -647,7 +717,7 @@ void startPrg()
                                     for (int j = 0; j < 4; j++) {
                                         for (int i = 0; i < 4; i++) {
                                             if (ship4[i+j*4] == 1) {
-                                                RectFill(&rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
+                                                RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
                                     }
@@ -658,34 +728,33 @@ void startPrg()
                                     for (int j = 0; j < 5; j++) {
                                         for (int i = 0; i < 5; i++) {
                                             if (ship5[i+j*5] == 1) {
-                                                RectFill(&rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
+                                                RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
                                     }
                                     break;
+                                }
                             }
-                        }
                         
                         
-                        ClipBlit(&rastport, 0, 0, win->RPort, win->BorderLeft, win->BorderTop, bmhd->bmh_Width, bmhd->bmh_Height, 192);
-                        if (state != START_SCREEN) RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
+                        //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
 
 
                         WaitTOF();
-                        WaitTOF();
-                        WaitTOF();
-                        WaitTOF();
+                        //WaitTOF();
+                        //WaitTOF();
+                        //WaitTOF();
 
                     }   while(!Done);
-                    } 
-                }
+                     
+                
                 
                 CloseWindow(win);
+                }
+                DisposeDTObject(Backfill->PictureObject);
             }
             FreeGadgets(glist);
-            }
-            if (Item) DisposeDTObject(Item);
-            
+        }
             
     }
     FreeVisualInfo(vi);
@@ -778,7 +847,6 @@ int main(int argc,char **argv)
 
 int cleanup() {
 
-    if (bitmap) FreeBitMap((struct BitMap *)bitmap);
     if (DataTypesBase) CloseLibrary(DataTypesBase);
     if (IntuitionBase) CloseLibrary(IntuitionBase);
     if (UtilityBase) CloseLibrary(UtilityBase);
@@ -788,47 +856,47 @@ int cleanup() {
 
 }
 
-void drawBoard(struct RastPort rp) {
+void drawBoard(struct RastPort *rp) {
 
     for (int j = 0; j < 16; j++) {
         for (int i = 0; i < 16; i++) {
 
             // player's ship
             if (board[i + j * 16] == 1) {
-                SetAPen(&rp, 101);
-                RectFill(&rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                SetAPen(rp, 101);
+                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
             }
 
             // computer's ship
             if (state == GAME_OVER && AIHits == 23) {
                 if (board[i + j * 16] == 2) {
-                    SetAPen(&rp, 98);
-                    RectFill(&rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                    SetAPen(rp, 98);
+                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
                 }
             }
 
             // player's miss
             if (board[i + j * 16] == 3) {
-                SetAPen(&rp, 83);
-                RectFill(&rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                SetAPen(rp, 83);
+                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
             }
 
             // player's hit
             if (board[i + j * 16] == 4) {
-                SetAPen(&rp, 84);
-                RectFill(&rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                SetAPen(rp, 84);
+                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
             }
 
             // computer's miss
             if (board[i + j * 16] == 5) {
-                SetAPen(&rp, 88);
-                RectFill(&rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                SetAPen(rp, 88);
+                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
             }
 
             // computer's hit
             if (board[i + j * 16] == 6) {
-                SetAPen(&rp, 74);
-                RectFill(&rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                SetAPen(rp, 74);
+                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
             }
 
             
@@ -836,70 +904,70 @@ void drawBoard(struct RastPort rp) {
     }
 }
 
-void drawShips(struct RastPort rp) {
+void drawShips(struct RastPort *rp) {
 
-    SetAPen(&rp, 129);
+    SetAPen(rp, 129);
 
     // draw ship 1
     for (int j = 0; j < 3; j++) {
         for (int i = 0; i < 3; i++) {
-            if (ship1_[i+j*3] == 1) RectFill(&rp, MARGIN+512+64+i*32, MARGIN+32+j*32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32);
+            if (ship1_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32);
         }
     }
 
     // draw ship 2
     for (int j = 0; j < 3; j++) {
         for (int i = 0; i < 3; i++) {
-            if (ship2_[i+j*3] == 1) RectFill(&rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+32);
+            if (ship2_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+32);
         }
     }
 
     // draw ship 3
     for (int j = 0; j < 2; j++) {
         for (int i = 0; i < 2; i++) {
-            if (ship3_[i+j*3] == 1) RectFill(&rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32);
+            if (ship3_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32);
         }
     }
 
     // draw ship 4
     for (int j = 0; j < 4; j++) {
         for (int i = 0; i < 4; i++) {
-            if (ship4_[i+j*4] == 1) RectFill(&rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32);
+            if (ship4_[i+j*4] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32);
         }
     }
 
     // draw ship 5
     for (int j = 0; j < 5; j++) {
         for (int i = 0; i < 5; i++) {
-            if (ship5_[i+j*5] == 1) RectFill(&rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32*4+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32*4+32+32);
+            if (ship5_[i+j*5] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32*4+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32*4+32+32);
         }
     }
 }
 
-void drawGrid(struct RastPort rp) {
+void drawGrid(struct RastPort *rp) {
 
-    SetAPen(&rp, 100);
+    SetAPen(rp, 100);
     
-    Move(&rp, MARGIN,MARGIN);
-    Draw(&rp, MARGIN+512,MARGIN);
+    Move(rp, MARGIN,MARGIN);
+    Draw(rp, MARGIN+512,MARGIN);
 
-    Move(&rp, MARGIN+512,MARGIN);
-    Draw(&rp, MARGIN+512,MARGIN+512);
+    Move(rp, MARGIN+512,MARGIN);
+    Draw(rp, MARGIN+512,MARGIN+512);
 
-    Move(&rp, MARGIN+512,MARGIN+512);
-    Draw(&rp, MARGIN, MARGIN+512);
+    Move(rp, MARGIN+512,MARGIN+512);
+    Draw(rp, MARGIN, MARGIN+512);
 
-    Move(&rp, MARGIN, MARGIN+512);
-    Draw(&rp, MARGIN, MARGIN);
+    Move(rp, MARGIN, MARGIN+512);
+    Draw(rp, MARGIN, MARGIN);
 
     for (int j = MARGIN+32; j < MARGIN+512; j+=32) {
-        Move(&rp, MARGIN, j);
-        Draw(&rp, MARGIN+512, j);
+        Move(rp, MARGIN, j);
+        Draw(rp, MARGIN+512, j);
     }
 
     for (int i = MARGIN+32; i < MARGIN+512; i+=32) {
-        Move(&rp, i, MARGIN);
-        Draw(&rp, i, MARGIN+512);
+        Move(rp, i, MARGIN);
+        Draw(rp, i, MARGIN+512);
     }
     
 }
@@ -1274,4 +1342,55 @@ int rotateShip(int *ship, int length, int nr) {
         }
     }
     
+}
+
+
+/* ---------------------------------------------------------------------- */
+/* Helper: Load a picture via datatypes                                   */
+/* ---------------------------------------------------------------------- */
+BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename)
+{
+    bfi->PictureObject = NewDTObject(filename,
+                            DTA_SourceType       ,DTST_FILE,
+		                                     DTA_GroupID          ,GID_PICTURE,
+		                                     PDTA_Remap           ,TRUE,
+                                             PDTA_DestBitMap      ,(ULONG)&bfi->BitMap,
+                                             PDTA_DestMode        ,PMODE_V43,
+		                                     TAG_DONE);
+
+    if (!bfi->PictureObject) return FALSE;
+
+    DoMethod (bfi->PictureObject, DTM_PROCLAYOUT, NULL, TRUE);
+
+    struct BitMapHeader *bmhd;
+    struct BitMap *bm;
+
+    GetDTAttrs (bfi->PictureObject,
+                PDTA_BitMapHeader, &bmhd,
+                PDTA_BitMap, &bm,
+                TAG_END);
+
+	printf("%d %d\n", bmhd, bm);
+	
+    if (!bmhd || !bm) return FALSE;
+
+    printf("Jiihaa!\n");
+
+    bfi->BitMap = bm;
+    bfi->BitMapHeader = bmhd;
+    bfi->CopyWidth  = bmhd->bmh_Width;
+    bfi->CopyHeight = bmhd->bmh_Height;
+
+	printf("Palautetaan TRUE\n");
+	
+    return TRUE;
+}
+
+void UnloadBackgroundImage(struct BackFillInfo *BFI)
+{
+	WaitBlit();
+	// both frees work with NULL
+	FreeBitMap(BFI->BitMap);
+	DisposeDTObject(BFI->PictureObject); // datatype object is freed here, because - although a different bitmap is used for blitting to the screen - the pens have to stay allocated
+	memset(BFI,0,sizeof(*BFI));
 }
