@@ -257,7 +257,7 @@ void startPrg()
 					WA_InnerHeight, 800,
                     WA_ReportMouse, TRUE,
                     WA_RMBTrap, TRUE,
-                    WA_Gadgets, glist,
+                    WA_Gadgets, NULL,
                     WA_SimpleRefresh, TRUE,
                     WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
                     WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | GADGETUP | IDCMP_REFRESHWINDOW,
@@ -507,6 +507,7 @@ void startPrg()
                                         800, 800,
                                         0xC0);
 
+                                        AddGList(win, &glist, 0, -1, NULL);
                                         RefreshGList(win->FirstGadget, win, NULL, -1);
 
                                             state = PLACE_SHIPS;
