@@ -51,9 +51,6 @@
 
 #define MARGIN 32
 
-#define WIN_TOP 0
-#define WIN_LEFT 80
-
 /*
     Below should be found from include files, but just in case...
 */
@@ -74,6 +71,7 @@ struct Library *UtilityBase = NULL;
 struct Library *GfxBase = NULL;
 struct Library *GadToolsBase = NULL;
 struct Library *DiskfontBase = NULL;
+struct Library *LayersBase = NULL;
 
 struct Window *win = NULL;
 
@@ -159,8 +157,15 @@ void __saveds MyBackfillFunc(
     if (bfi == NULL || bfi->BitMap == NULL) return;
 	
 
-    int dx = (rp->Layer->Width  - bfi->BitMapHeader->bmh_Width)  / 2;
-    int dy = (rp->Layer->Height + borderTop - bfi->BitMapHeader->bmh_Height) / 2;
+    //int dx = (rp->Layer->Width  - bfi->BitMapHeader->bmh_Width)  / 2;
+    //int dy = (rp->Layer->Height - bfi->BitMapHeader->bmh_Height) / 2;
+
+    int layerW = rp->Layer->ClipRect->bounds.MaxX - rp->Layer->ClipRect->bounds.MinX + 1;
+
+    int dx = (layerW - bfi->BitMapHeader->bmh_Width)  / 2;
+    int dy = bfi->Screen->BarHeight + 1;
+
+
 
 
     BltBitMapRastPort(bfi->BitMap,
@@ -168,7 +173,7 @@ void __saveds MyBackfillFunc(
                   rp,
                   dx, dy,
                   800, 800,
-                  0xC0);
+                  0xC0, -1, NULL);
 
 }
 
@@ -186,8 +191,6 @@ void startPrg()
 
     struct Screen *scr = LockPubScreen("Workbench");
     glist = NULL;
-
-    borderTop = scr->FirstWindow->BorderTop;
 
     LONG Depth;
     
@@ -244,26 +247,27 @@ void startPrg()
 
             Backfill->Hook.h_Data = Backfill;
 
-            if (LoadPicture(Backfill, name))
+            if (LoadPicture(Backfill, name, scr))
             {
 				win = OpenWindowTags (NULL,
 					WA_Title, "Battle ship game for AmigaOS 3",
-                    WA_Top, WIN_TOP,
-                    WA_Left, WIN_LEFT,
+                    WA_Top, 0,
+                    WA_Left, 80,
 					WA_InnerWidth, 800,
 					WA_InnerHeight, 800,
                     WA_ReportMouse, TRUE,
                     WA_RMBTrap, TRUE,
                     WA_Gadgets, NULL,
-                    WA_SimpleRefresh, TRUE,
+                    WA_SmartRefresh, TRUE,
                     WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
-                    WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | GADGETUP | IDCMP_REFRESHWINDOW,
+                    WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | IDCMP_GADGETUP | IDCMP_REFRESHWINDOW,
                     WA_BackFill, &Backfill->Hook,
                     TAG_END);
 
 				if (win) {
 
                     rastport = win->RPort;
+                    borderTop = win->BorderTop;
 
                     //GT_RefreshWindow(win, NULL);
 
@@ -300,12 +304,14 @@ void startPrg()
                     {
                         // "clean" window while dragging ships
                         if (state == PLACE_SHIPS && shipSelected != 0) {
+                            /*
                             BltBitMapRastPort(Backfill->BitMap,
                                         0,0,
                                         rastport,
                                         win->BorderLeft, win->BorderTop,
                                         800, 32*16 + MARGIN,
                                         0xC0);
+                                        */
                         }
                         
 
@@ -395,7 +401,11 @@ void startPrg()
 
                             switch(MsgClass)
                             {
-                                
+                                case IDCMP_REFRESHWINDOW:
+
+                                    GT_RefreshWindow(win, NULL);
+                                    break;
+
                                 case IDCMP_GADGETUP:
                                     gadEvent = (struct Gadget *)Message->IAddress;
 
@@ -497,12 +507,14 @@ void startPrg()
                                     if (MsgCode == 232) {
 
                                         if (state == START_SCREEN) {
+                                            /*
                                             BltBitMapRastPort(Backfill->BitMap,
                                         0, 0,
                                         rastport,
                                         win->BorderLeft, win->BorderTop,
                                         800, 800,
                                         0xC0);
+                                        */
 
                                         AddGList(win, &glist, 0, -1, NULL);
                                         RefreshGList(win->FirstGadget, win, NULL, -1);
@@ -1392,7 +1404,7 @@ int rotateShip(int *ship, int length, int nr) {
 /* ---------------------------------------------------------------------- */
 /* Load a picture via datatypes                                           */
 /* ---------------------------------------------------------------------- */
-BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename)
+BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename, struct Screen *scr)
 {
     bfi->PictureObject = NewDTObject(filename,
                             DTA_SourceType       ,DTST_FILE,
@@ -1416,6 +1428,7 @@ BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename)
 	
     if (!bmhd || !bm) return FALSE;
 
+    bfi->Screen = scr;
     bfi->BitMap = bm;
     bfi->BitMapHeader = bmhd;
     bfi->CopyWidth  = bmhd->bmh_Width;
