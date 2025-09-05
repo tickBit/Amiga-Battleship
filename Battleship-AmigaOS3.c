@@ -10,6 +10,9 @@
 
     With VBCC: vc -c99 Battleship-AmigaOS3.c -o Battleship -lamiga -fpu=688881
 
+    While compiling, you'll get a lot of warning from VBCC.
+    If necessary, increse stack (i.e. stack 20000 in AmigaDOS).
+
     You can adjust the difficulty of the game by increasing or decreasing
     constant DIFFICULTY (and variable error).
 
@@ -1410,8 +1413,6 @@ BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename)
                 PDTA_BitMapHeader, &bmhd,
                 PDTA_BitMap, &bm,
                 TAG_END);
-
-	printf("%d %d\n", bmhd, bm);
 	
     if (!bmhd || !bm) return FALSE;
 
