@@ -258,17 +258,13 @@ void startPrg()
                     WA_ReportMouse, TRUE,
                     WA_RMBTrap, TRUE,
                     WA_Gadgets, glist,
-                    WA_SmartRefresh, TRUE,
+                    WA_SimpleRefresh, TRUE,
                     WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
-                    WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | GADGETUP,
+                    WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | GADGETUP | IDCMP_REFRESHWINDOW,
                     WA_BackFill, &Backfill->Hook,
                     TAG_END);
 
 				if (win) {
-
-                    //bitmap = (struct BitMap *)AllocBitMap(bmhd->bmh_Width,bmhd->bmh_Height,bmhd->bmh_Depth,BMF_CLEAR | BMF_DISPLAYABLE,win->RPort->BitMap);
-                    //InitRastPort(&rastport);
-                    //rastport.BitMap = bitmap;
 
                     rastport = win->RPort;
 
@@ -300,14 +296,22 @@ void startPrg()
 
                     state = START_SCREEN;
                     
-                    printf("START_SCREEN\n");
-
                     /*
                     *  Main event loop
                     */
                     do
                     {
-                                                
+                        // "clean" window while dragging ships
+                        if (state == PLACE_SHIPS && shipSelected != 0) {
+                            BltBitMapRastPort(Backfill->BitMap,
+                                        0,0,
+                                        rastport,
+                                        win->BorderLeft, win->BorderTop,
+                                        800, 32*16 + MARGIN,
+                                        0xC0);
+                        }
+                        
+
                         if (state == START_SCREEN) {
                         
                             SetAPen(rastport, 55);
@@ -419,6 +423,13 @@ void startPrg()
 
                                         case NEWGAME_BUTTON:
 
+                                            BltBitMapRastPort(Backfill->BitMap,
+                                                0, 0,
+                                                rastport,
+                                                win->BorderLeft, win->BorderTop,
+                                                800, 800,
+                                                0xC0);
+                                            RefreshGList(win->FirstGadget, win, NULL, -1);
                                             initGame();
 
                                             state = PLACE_SHIPS;
@@ -476,6 +487,8 @@ void startPrg()
                                         win->BorderLeft, win->BorderTop,
                                         800, 800,
                                         0xC0);
+
+                                        RefreshGList(win->FirstGadget, win, NULL, -1);
 
                                             state = PLACE_SHIPS;
                                             break;
@@ -670,12 +683,16 @@ void startPrg()
                                 case IDCMP_CLOSEWINDOW:
                                     Done = TRUE;
                                     break;
+
                             }               
 
                         } if (Message != NULL)
                             GT_ReplyIMsg((struct Message *)Message);
 
                             if (shipSelected != 0 && state == PLACE_SHIPS) {
+
+                                //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
+
                                 SetAPen(rastport, 29);
 
                                 switch (shipSelected) {
@@ -684,7 +701,11 @@ void startPrg()
                                     for (int j = 0; j < 3; j++) {
                                         for (int i = 0; i < 3; i++) {
                                             if (ship1[i+j*3] == 1) {
-                                                RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
+
+                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32))
+                                                
+                                                    RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
                                     }
@@ -695,7 +716,10 @@ void startPrg()
                                     for (int j = 0; j < 3; j++) {
                                         for (int i = 0; i < 3; i++) {
                                             if (ship2[i+j*3] == 1) {
-                                                RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
+
+                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32))
+                                                    RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
                                     }
@@ -706,6 +730,9 @@ void startPrg()
                                     for (int j = 0; j < 2; j++) {
                                         for (int i = 0; i < 2; i++) {
                                             if (ship3[i+j*2] == 1) {
+
+                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32))
                                                 RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
@@ -717,6 +744,9 @@ void startPrg()
                                     for (int j = 0; j < 4; j++) {
                                         for (int i = 0; i < 4; i++) {
                                             if (ship4[i+j*4] == 1) {
+
+                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32))
                                                 RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
@@ -728,6 +758,9 @@ void startPrg()
                                     for (int j = 0; j < 5; j++) {
                                         for (int i = 0; i < 5; i++) {
                                             if (ship5[i+j*5] == 1) {
+
+                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32))
                                                 RectFill(rastport, mx + i*32, my + j*32, mx + i*32+32, my+j*32+32);
                                             }
                                         } 
@@ -736,14 +769,8 @@ void startPrg()
                                 }
                             }
                         
-                        
-                        //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
-
 
                         WaitTOF();
-                        //WaitTOF();
-                        //WaitTOF();
-                        //WaitTOF();
 
                     }   while(!Done);
                      
@@ -1346,7 +1373,7 @@ int rotateShip(int *ship, int length, int nr) {
 
 
 /* ---------------------------------------------------------------------- */
-/* Helper: Load a picture via datatypes                                   */
+/* Load a picture via datatypes                                           */
 /* ---------------------------------------------------------------------- */
 BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename)
 {
@@ -1374,23 +1401,10 @@ BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename)
 	
     if (!bmhd || !bm) return FALSE;
 
-    printf("Jiihaa!\n");
-
     bfi->BitMap = bm;
     bfi->BitMapHeader = bmhd;
     bfi->CopyWidth  = bmhd->bmh_Width;
     bfi->CopyHeight = bmhd->bmh_Height;
-
-	printf("Palautetaan TRUE\n");
 	
     return TRUE;
-}
-
-void UnloadBackgroundImage(struct BackFillInfo *BFI)
-{
-	WaitBlit();
-	// both frees work with NULL
-	FreeBitMap(BFI->BitMap);
-	DisposeDTObject(BFI->PictureObject); // datatype object is freed here, because - although a different bitmap is used for blitting to the screen - the pens have to stay allocated
-	memset(BFI,0,sizeof(*BFI));
 }
