@@ -142,12 +142,6 @@ int plyHits = 0;
 
 struct BackFillInfo BF1, *Backfill;
 
-// this seems to be a bug (or feature) in SAS/C: -6%5 gives -1 instead of 4
-#define MOD(x,y) ((x)<0 ? (y)-((-(x))%(y)) : (x)%(y))
-
-#define RECTSIZEX(r) ((r)->MaxX-(r)->MinX+1)
-#define RECTSIZEY(r) ((r)->MaxY-(r)->MinY+1)
-
 // these settings might ONLY work with VBCC compiler!
 void __saveds MyBackfillFunc(
     __reg("a0") struct Hook *Hook,
