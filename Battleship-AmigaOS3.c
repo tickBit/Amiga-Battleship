@@ -268,7 +268,7 @@ void startPrg()
 
                     rastport = win->RPort;
 
-                    GT_RefreshWindow(win, NULL);
+                    //GT_RefreshWindow(win, NULL);
 
                     if (!(myfont = (struct TextFont*)OpenDiskFont(&myta))) {
                         printf("Failed to open CGTimes 72 font\nWill use Topaz 12...\n");
@@ -316,13 +316,13 @@ void startPrg()
                         
                             SetAPen(rastport, 55);
                             SetFont(rastport, myfont);
-                            Move(rastport, (800-TextLength(rastport, "Battleship", 10)) / 2, win->BorderTop+MARGIN + borderTop);
-                            Text(rastport, "Battleship", 10);
+                            Move(rastport, (800-TextLength(rastport, "Battle ship", 11)) / 2, win->BorderTop+MARGIN + borderTop);
+                            Text(rastport, "Battle ship", 11);
 
                             SetFont(rastport, myfont2);
                             SetAPen(rastport, 41);
-                            Move(rastport, (800-TextLength(rastport, "Version 1.1.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                            Text(rastport, "Version 1.1.0", 13);
+                            Move(rastport, (800-TextLength(rastport, "Version 1.2.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                            Text(rastport, "Version 1.2.0", 13);
 
                             Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                             Text(rastport, "Click anywhere in the window to continue", 40);
@@ -345,25 +345,36 @@ void startPrg()
                         if (state == PLAY) {
                             SetFont(rastport, myfont);
                             SetAPen(rastport, 66);
-                            Move(rastport, 128, MARGIN+ 32*16+128);
+                            Move(rastport, 128, MARGIN + 32*16+128+32);
                             Text(rastport, "Game on!", 8);
 
                             SetFont(rastport, myfont2);
                             
                             SetAPen(rastport, 84);
-                            RectFill(rastport, 32, MARGIN + 32*16+160-16, 32+32, MARGIN + 32*16+160+32-16);
+                            RectFill(rastport, 32, MARGIN + 32*16+160-16 + 32, 32+32, MARGIN + 32*16+160+32-16 + 32);
                             SetAPen(rastport, 66);
-                            Move(rastport, 32+68, MARGIN + 32*16+160);
+                            Move(rastport, 32+68, MARGIN + 32*16+160+32);
                             Text(rastport, "Human player has hit AI's ship", 30);
 
                             SetAPen(rastport, 83);
-                            RectFill(rastport, 32, MARGIN + 32*16+180, 32+32, MARGIN + 32*16+180+32);
+                            RectFill(rastport, 32, MARGIN + 32*16+180 + 32, 32+32, MARGIN + 32*16+180+32 + 32);
                             SetAPen(rastport, 66);
-                            Move(rastport, 32+68, MARGIN + 32*16+180+16);
+                            Move(rastport, 32+68, MARGIN + 32*16+180+16+32);
                             Text(rastport, "Human player has missed AI's ship", 33);
                         }
-                        if (AIHits == 23 || plyHits == 23) state = GAME_OVER;
                         
+                        if ((AIHits == 23 || plyHits == 23) && state != GAME_OVER) {
+                            state = GAME_OVER;
+
+                            // clear a bit the screen...
+                                            BltBitMapRastPort(Backfill->BitMap,
+                                                0,MARGIN+32*16+70,
+                                                rastport,
+                                                win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
+                                                600, 180,
+                                            0xC0);
+                        }
+
                         if (state == GAME_OVER) {
                             SetFont(rastport, myfont);
                             SetAPen(rastport, 99);
@@ -413,6 +424,14 @@ void startPrg()
                                             }
 
                                             placeComputersShips();
+
+                                            // clear a bit the screen...
+                                            BltBitMapRastPort(Backfill->BitMap,
+                                                0,MARGIN+32*16+70,
+                                                rastport,
+                                                win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
+                                                600, 120,
+                                            0xC0);
 
                                             state = PLAY;
                                             break;
