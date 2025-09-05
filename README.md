@@ -1,6 +1,6 @@
 # Battleship game for AmigaOS 3
 
-Classic battle ship game with simple AI for AmigaOS 3.x.
+Classic battle ship game with simple AI for AmigaOS 3.x. The latest update works at least on my Amiberry with AmigaOS 3.x, but it doesn't seem to work well with WinUAE based emulation.. Trying to fix it soon...
 
 To position a ship, first click once on the ship, then simply move mouse to the grid and when a position to place a ship is found, click there.
 
