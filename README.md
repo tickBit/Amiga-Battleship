@@ -2,6 +2,8 @@
 
 Classic battle ship game with simple AI for AmigaOS 3.x.
 
+To position a ship, first click once on the ship, then simply move mouse to the grid and when a position to place a ship is found, click there.
+
 The game uses 1999 standard of C, so when compiling with VBCC, switch -c99 must be used.
 More info in the source code. The source can be ONLY compiled with VBCC due the usage of backfill hook.
 
