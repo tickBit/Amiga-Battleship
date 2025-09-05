@@ -1,14 +1,14 @@
 /*
     Battle ship game for Amiga a'la spaghetti...
 
-    Version 1.1.0
+    Version 1.2.0
 
     IMPORTANT:
 
-    The C compiler must comply with the 1999 C standard.
-    ----------------------------------------------------
+    Can be (probably) ONLY be compiled with VBCC
+    --------------------------------------------
 
-    With VBCC: vc -c99 Battleship.c -o Battleship -lamiga -fpu=68881
+    With VBCC: vc -c99 Battleship-AmigaOS3.c -o Battleship -lamiga -fpu=688881
 
     You can adjust the difficulty of the game by increasing or decreasing
     constant DIFFICULTY (and variable error).
