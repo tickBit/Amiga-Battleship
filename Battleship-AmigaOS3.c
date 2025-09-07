@@ -286,7 +286,7 @@ void startPrg()
                     Done = FALSE;
                     BOOL prevExists = FALSE;
 
-                    int mx, my, pmx, pmy, fillWidth, fillHeight;
+                    int mx, my, pmx, pmy, fillWidth, fillHeight, bpmx, bpmy;
 
                     state = START_SCREEN;
                     
@@ -489,13 +489,19 @@ void startPrg()
                                     // right and left mousebutton related...
                                     if (MsgCode == 105 || MsgCode == 104) break;
 
-                                    // grab ship 1 with left mousebutton 
+                                    // left mousebutton 
                                     if (MsgCode == 232) {
 
+                                        if (prevExists) {
+                                            bpmx = mx;
+                                            bpmy = my;
+                                        }
+
                                         if (state == START_SCREEN) {
-                                            /*
+
+                                        /*
                                             BltBitMapRastPort(Backfill->BitMap,
-                                        0, 0,
+                                            0, 0,
                                         rastport,
                                         win->BorderLeft, win->BorderTop,
                                         800, 800,
@@ -566,7 +572,14 @@ void startPrg()
                                         if (bx < 16 && by < 16) {
 
                                             if (shipSelected != 0) {
-                                                                                            
+
+                                                BltBitMapRastPort(Backfill->BitMap,
+                                                    bpmx, bpmy,
+                                                    rastport,
+                                                    bpmx+win->BorderLeft, bpmy+win->BorderTop,
+                                                    fillWidth+1, fillHeight+1,
+                                                0xC0);
+                                        
                                                 switch (shipSelected) {
                                                     case 1:
 
