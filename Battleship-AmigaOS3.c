@@ -518,7 +518,7 @@ void startPrg()
                                         
                                         if (state == PLACE_SHIPS) {
 
-                                        if (mx >= MARGIN + 512 + 64 && mx <= MARGIN + 512 + 64 + 32*3 && my >= MARGIN && my <= MARGIN + 32*2) {
+                                        if (mx + win->BorderLeft >= MARGIN + 512 + 64 && mx + win->BorderLeft <= MARGIN + 512 + 64 + 32*3 && my + win->BorderTop >= win->BorderTop + MARGIN && my + win->BorderTop + win->BorderTop <= MARGIN + 32*3) {
                                             if (shipsPlaced[0] == TRUE) break;
                                             angle_ = 0;
                                             shipSelected = 1;
@@ -527,7 +527,7 @@ void startPrg()
                                             break;
                                         }
 
-                                        if (mx >= MARGIN + 512 + 64 && mx <= MARGIN + 512 + 64 + 32*3 && my >= MARGIN + 32 + 32*2 + 32 + 32 && my <= MARGIN + 32 + 32*2 + 32 + 32 + 32) {
+                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*3 && my + win->BorderTop >= MARGIN + 32 + 32*2 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32 + 32) {
                                             if (shipsPlaced[1] == TRUE) break;
                                             angle_ = 0;
                                             shipSelected = 2;
@@ -536,7 +536,7 @@ void startPrg()
                                             break;
                                         }
 
-                                        if (mx >= MARGIN + 512 + 64 && mx <= MARGIN + 512 + 64 + 32*2 && my >= MARGIN + 32 + 32*2 + 32 + 32 + 32 + 32 && my <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32) {
+                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*2 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32) {
                                             if (shipsPlaced[2] == TRUE) break;
                                             angle_ = 0;
                                             shipSelected = 3;
@@ -546,7 +546,7 @@ void startPrg()
                                             break;
                                         }
 
-                                        if (mx >= MARGIN + 512 + 64 && mx <=  + 512 + 64 + 32*4 && my >= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 && my <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4) {
+                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*4 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4) {
                                             if (shipsPlaced[3] == TRUE) break;
                                             angle_ = 0;
                                             shipSelected = 4;
@@ -556,7 +556,7 @@ void startPrg()
                                             break;
                                         }
 
-                                        if (mx >= MARGIN + 512 + 64 && mx <= MARGIN + 512 + 64 + 32*5 && my >= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 && my <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 + 32*4 + 32) {
+                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*5 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 + 32*4 + 32) {
                                             if (shipsPlaced[4] == TRUE) break;
                                             angle_ = 0;
                                             shipSelected = 5;
@@ -812,8 +812,8 @@ void startPrg()
 
                                 case 5:
 
-                                    fillHeight = 4*32;
-                                    fillWidth = 4*32;
+                                    fillHeight = 5*32;
+                                    fillWidth = 5*32;
 
                                     for (int j = 0; j < 5; j++) {
                                         for (int i = 0; i < 5; i++) {
