@@ -18,7 +18,8 @@
 
     TODD:
     - check EasyRequest
-
+    - Clear BltBitMapRastPort
+      - limit vertically to clearing area at the bottom
  */
 
 #include <stdio.h>
@@ -27,6 +28,10 @@
 
 #include <dos/dos.h>
 #include <exec/memory.h>
+#include <exec/types.h>
+
+#include <exec/interrupts.h>
+#include <exec/io.h>
 
 #include <datatypes/pictureclass.h>
 
@@ -44,7 +49,6 @@
 #include <clib/exec_protos.h>
 #include <clib/dos_protos.h>
 #include <clib/gadtools_protos.h>
-
 #include <clib/macros.h>
 
 #define PLAY_BUTTON     (0)
@@ -280,6 +284,7 @@ void startPrg()
                     BOOL allPlaced;
 
                     Done = FALSE;
+                    BOOL prevExists = FALSE;
 
                     int mx, my, pmx, pmy, fillWidth, fillHeight;
 
@@ -369,7 +374,10 @@ void startPrg()
                             }
                         }
 
-                        while((Message = (struct IntuiMessage *)GT_GetIMsg(win->UserPort)) != NULL)
+                        Wait(1 << win->UserPort->mp_SigBit);
+                        Message = (struct IntuiMessage *)GT_GetIMsg(win->UserPort);
+                        
+                        if (Message)
                         {
                             
                             MsgClass = Message->Class;
@@ -647,7 +655,7 @@ void startPrg()
                                                 break;
                                             }
                                         }
-                                        }
+                                        
                                     }
                                     
                                     if (state == PLAY) {
@@ -676,42 +684,37 @@ void startPrg()
                                     }
 
                                     break;
-
+                                }
                                 case IDCMP_MOUSEMOVE:
 
-                                    pmx = mx;
-                                    pmy = my;
+                                    if (prevExists) {
+                                        pmx = mx;
+                                        pmy = my;
+                                    }
 
-                                    mx = Message->MouseX - win->BorderLeft;
-                                    my = Message->MouseY - win->BorderTop;          
-
+                                    // origo of coordinates at window frame's (0,0) 
+                                    mx = Message->MouseX;
+                                    my = Message->MouseY;          
                                     
-                                   
-
-                                    GT_ReplyIMsg((struct Message *)Message);
-                                    break;
-
-                                case IDCMP_CLOSEWINDOW:
-                                    Done = TRUE;
-                                    break;
-
-                            }               
-
-                        } if (Message != NULL)
-                            GT_ReplyIMsg((struct Message *)Message);
-
-                            if (shipSelected != 0 && state == PLACE_SHIPS) {
+                                    if (shipSelected != 0 && state == PLACE_SHIPS) {
 
                                 //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
 
-                                SetAPen(rastport, 29);
+                                
 
-                                BltBitMapRastPort(Backfill->BitMap,
-                                        pmx,pmy,
+                                if (prevExists) {
+                                    
+                                    BltBitMapRastPort(Backfill->BitMap,
+                                        pmx, pmy,
                                         rastport,
-                                        win->BorderLeft + pmx, win->BorderTop + pmy,
-                                        fillWidth, fillHeight,
+                                        pmx+win->BorderLeft, pmy+win->BorderTop,
+                                        fillWidth+1, fillHeight+1,
                                         0xC0);
+                                }
+                                
+                                
+                                prevExists = TRUE;
+                                SetAPen(rastport, 29);
 
                                 switch (shipSelected) {
                                 case 1:
@@ -725,10 +728,10 @@ void startPrg()
 
                                             if (ship1[i+j*3] == 1) {
 
-                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= win->BorderTop + 16 * 32)) {
+                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
+                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= win->BorderTop + 16 * 32)) {
 
-                                                    RectFill(rastport, mx + i*32, my + j*32+win->BorderTop, mx + i*32+32, my+j*32+32+win->BorderTop);
+                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
                                                     }
                                             }
                                         } 
@@ -744,10 +747,10 @@ void startPrg()
                                         for (int i = 0; i < 3; i++) {
                                             if (ship2[i+j*3] == 1) {
 
-                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 + MARGIN <= win->BorderLeft
+                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft + MARGIN <= win->BorderLeft
                                                     || my + j * 32 <= win->BorderTop + MARGIN || my + 32 + j*32 >= 16 * 32)) {
                                                       
-                                                    RectFill(rastport, mx + i*32+win->BorderLeft, my + j*32+win->BorderTop, mx + i*32+32 + win->BorderLeft, my+j*32+32+win->BorderTop);
+                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + i*32+32 + win->BorderLeft, my+j*32+32 + win->BorderTop);
                                                     }
                                             }
                                         } 
@@ -767,7 +770,7 @@ void startPrg()
                                                     || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
                                                         
 
-                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32+win->BorderTop, mx + i*32+32+win->BorderLeft, my+j*32+32+win->BorderTop);
+                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop , mx + win->BorderLeft+ i*32+32, my+j*32+32+ win->BorderTop);
                                                     }
                                             }
                                         } 
@@ -787,7 +790,7 @@ void startPrg()
                                                     || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
                                                        
                                                     
-                                                RectFill(rastport, mx + i*32, my + j*32+win->BorderTop, mx + i*32+32, my+j*32+32+win->BorderTop);
+                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx +win->BorderLeft + i*32+32, my + win->BorderTop+j*32+32);
                                                     }
                                             }
                                         } 
@@ -806,7 +809,7 @@ void startPrg()
                                                 if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
                                                     || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
                                                        
-                                                RectFill(rastport, mx + i*32, my + j*32+win->BorderTop, mx + i*32+32, my+j*32+32+win->BorderTop);
+                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx+ win->BorderLeft + i*32+32, my+ win->BorderTop+j*32+32);
                                                     }
                                             }
                                         } 
@@ -814,9 +817,23 @@ void startPrg()
                                     break;
                                 }
                             }
+
+
+
+                                    break;
+
+                                case IDCMP_CLOSEWINDOW:
+                                    Done = TRUE;
+                                    break;
+
+                            }               
+
+                        }
+                        GT_ReplyIMsg((struct Message *)Message);
+
                         
 
-                        WaitTOF();
+                        //WaitTOF();
 
                     }   while(!Done);
                      
