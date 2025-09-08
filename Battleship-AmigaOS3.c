@@ -539,13 +539,8 @@ void startPrg()
                                                             height = 5;
                                                     }
                                                     
-                                                    bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 2;
+                                                    bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
                                                     by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
-                                                                                                        
-                                                                                                                
-                                                        fillHeight = (16 - by) * 32;
-                                                        if (fillHeight > height) fillHeight = height;
-                                                        if (fillHeight < 32) fillHeight = 32 + 5;
                                                     
                                                         BltBitMapRastPort(Backfill->BitMap,
                                                             bpmx, bpmy,
@@ -757,16 +752,8 @@ void startPrg()
                                             
                                             printf("%d\n",by);
                                             
-                                            if (bx < 0 || by > 16) break;
 
                                             if (prevExists) {
-                                                                                                        
-                                                    fillHeight = (16 - by) * 32;
-                                                    if (fillHeight > height) fillHeight = height;
-                                                    if (fillHeight <= 32) fillHeight = 32+5;
-
-                                                    if (pmx <= win->BorderLeft) pmx = win->BorderLeft;
-                                                    if (pmx >= 800-win->BorderRight) pmx = 800-win->BorderRight;
                                                     
                                                             BltBitMapRastPort(Backfill->BitMap,
                                                                 pmx, pmy,
@@ -793,10 +780,10 @@ void startPrg()
 
                                                             if (ship1[i+j*3] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 * 3 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
-                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + j*32 + win->BorderTop >= win->BorderTop + 16 * 32)) {
+                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
 
-                                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
+                                                                    RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
                                                                 }
                                                             }
                                                         } 
@@ -812,10 +799,10 @@ void startPrg()
                                                         for (int i = 0; i < 3; i++) {
                                                             if (ship2[i+j*3] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 + win->BorderLeft + MARGIN <= win->BorderLeft
-                                                                    || my + win->BorderTop + j * 32 <= win->BorderTop + MARGIN || my + win->BorderTop + 32 + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
-                                                        
-                                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + i*32+32 + win->BorderLeft, my+j*32+32 + win->BorderTop);
+                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+
+                                                                    RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
                                                                 }
                                                             }
                                                         } 
@@ -831,11 +818,10 @@ void startPrg()
                                                         for (int i = 0; i < 2; i++) {
                                                             if (ship3[i+j*2] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= 800-1 - win->BorderRight + win->BorderLeft + MARGIN || mx + i * 32 + win->BorderLeft <= win->BorderLeft
-                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= MARGIN + 16 * 32 + win->BorderTop)) {
-                                                            
+                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
 
-                                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop , mx + win->BorderLeft+ i*32+32, my+j*32+32+ win->BorderTop);
+                                                                    RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
                                                                 }
                                                             }
                                                         } 
@@ -851,10 +837,10 @@ void startPrg()
                                                         for (int i = 0; i < 4; i++) {
                                                             if (ship4[i+j*4] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= MARGIN + 16 * 32 + win->BorderTop)) {                                                       
-                                                        
-                                                                        RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx +win->BorderLeft + i*32+32, my + win->BorderTop+j*32+32);
+                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+
+                                                                    RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
                                                                 }
                                                             }
                                                         } 
@@ -870,10 +856,10 @@ void startPrg()
                                                         for (int i = 0; i < 5; i++) {
                                                             if (ship5[i+j*5] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 + win->BorderLeft + MARGIN <= win->BorderLeft
-                                                                    || my + win->BorderTop + j * 32 <= win->BorderTop + MARGIN || my + win->BorderTop + 32 + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
-                                                                        
-                                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx+ win->BorderLeft + i*32+32, my+ win->BorderTop+j*32+32);
+                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+
+                                                                    RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
                                                                 }
                                                             }
                                                         } 
