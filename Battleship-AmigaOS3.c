@@ -1,7 +1,7 @@
 /*
         Battle ship game for Amiga a'la spaghetti...
 
-        Version 1.2.0
+        Version 1.3.0
 
         IMPORTANT:
 
@@ -11,12 +11,12 @@
         With VBCC: vc -c99 Battleship-AmigaOS3.c -o Battleship -lamiga -fpu=688881
 
         While compiling, you'll get a lot of warning from VBCC.
-        If necessary, increse stack (i.e. stack 20000 in AmigaDOS).
+        If necessary, increase stack (i.e. stack 20000 in AmigaDOS).
 
         You can adjust the difficulty of the game by increasing or decreasing
         constant DIFFICULTY (and variable error).
 
-        TODD:
+        TODO:
         - check EasyRequest
         - Clear BltBitMapRastPort
         - limit vertically to clearing area at the bottom
@@ -274,7 +274,7 @@ void startPrg()
                         }
 
                         myfont2 = (struct TextFont*)OpenFont(&Topaz120);
-
+                        SetDrMd(rastport,0);
                         
                         struct Gadget *gadEvent;
 
@@ -322,7 +322,7 @@ void startPrg()
                             if (state == PLACE_SHIPS) {
                                 SetAPen(rastport, 66);
                                 SetFont(rastport, myfont);
-                                Move(rastport, 32, MARGIN + 32*16+128);
+                                Move(rastport, 32, MARGIN + 32*16+128 + win->BorderTop + rastport->TxBaseline);
                                 Text(rastport, "Positioning of ships", 20);
                             }
 
@@ -417,16 +417,14 @@ void startPrg()
 
                                                 placeComputersShips();
 
-                                                // clear a bit the screen...
-                                                /*
+                                                // clear "positioning of ships"
                                                 BltBitMapRastPort(Backfill->BitMap,
-                                                    0,MARGIN+32*16+70,
+                                                    0,MARGIN+32*16+128,
                                                     rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
-                                                    , 120,
-                                                0xC0);
-                                                */
-
+                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+128,
+                                                    512+32, 128,
+                                                    0xC0);
+                                                
                                                 state = PLAY;
                                                 break;
                                             case UNDO_BUTTON:
@@ -506,14 +504,14 @@ void startPrg()
 
                                             if (state == START_SCREEN) {
 
-                                            /*
+                                            
                                                 BltBitMapRastPort(Backfill->BitMap,
                                                 0, 0,
-                                            rastport,
-                                            win->BorderLeft, win->BorderTop,
-                                            800, 800,
-                                            0xC0);
-                                            */
+                                                rastport,
+                                                win->BorderLeft, win->BorderTop,
+                                                800, 350,
+                                                0xC0);
+                                            
 
                                                 AddGList(win, &glist, 0, -1, NULL);
                                                 RefreshGList(win->FirstGadget, win, NULL, -1);
@@ -543,14 +541,12 @@ void startPrg()
                                                     
                                                     bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 2;
                                                     by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                                                                        
+                                                                                                                
+                                                        fillHeight = (16 - by) * 32;
+                                                        if (fillHeight > height) fillHeight = height;
+                                                        if (fillHeight < 32) fillHeight = 32 + 5;
                                                     
-                                                    printf("bx = %D :: by = %d\n", bx, by);
-                                                    
-                                                    if (bx < 16 && by < 16) {
-                                                    
-                                                        if (my + win->BorderTop + fillHeight + 1 > win->BorderTop + MARGIN + 512 + fillHeight + 1)
-                                                            fillHeight = my + fillHeight + 1 - 512 - MARGIN - win->BorderTop;
-
                                                         BltBitMapRastPort(Backfill->BitMap,
                                                             bpmx, bpmy,
                                                             rastport,
@@ -643,7 +639,7 @@ void startPrg()
                                                                 }
                                                                 break;
                                                         }
-                                                    }
+                                                    
                                                     break;
                                                 }
                                                 
@@ -700,11 +696,11 @@ void startPrg()
                                                 
                                             
                                                 if (state == PLAY) {
-                                                    bx = mx / 32;
-                                                    by = my / 32;
+                                                    bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 2;
+                                                    by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
 
                                                     if (bx >= 0 && bx < 16 & by >= 0 && by < 16) {
-
+                                                        
                                                         if (board[bx + by * 16] == 0) {
                                                             // player's miss
                                                             board[bx + by * 16] = 3;
@@ -741,21 +737,49 @@ void startPrg()
                                         if (shipSelected != 0 && state == PLACE_SHIPS) {
 
                                     //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
-
-                                    
+                                            int height = 0;
+                                                    
+                                            switch (shipSelected) {
+                                                        case 1:
+                                                            height = 3;
+                                                        case 2:
+                                                            height = 3;
+                                                        case 3:
+                                                            height = 2;
+                                                        case 4:
+                                                            height = 4;
+                                                        case 5:
+                                                            height = 5;
+                                                    }
+                                                    
+                                            bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
+                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                            
+                                            printf("%d\n",by);
+                                            
+                                            if (bx < 0 || by > 16) break;
 
                                             if (prevExists) {
-                                        
-                                                BltBitMapRastPort(Backfill->BitMap,
-                                                    pmx, pmy,
-                                                    rastport,
-                                                    pmx+win->BorderLeft, pmy+win->BorderTop,
-                                                    fillWidth+1, fillHeight+1,
-                                                    0xC0);
+                                                                                                        
+                                                    fillHeight = (16 - by) * 32;
+                                                    if (fillHeight > height) fillHeight = height;
+                                                    if (fillHeight <= 32) fillHeight = 32+5;
+
+                                                    if (pmx <= win->BorderLeft) pmx = win->BorderLeft;
+                                                    if (pmx >= 800-win->BorderRight) pmx = 800-win->BorderRight;
+                                                    
+                                                            BltBitMapRastPort(Backfill->BitMap,
+                                                                pmx, pmy,
+                                                                rastport,
+                                                                pmx+win->BorderLeft, pmy+win->BorderTop,
+                                                                fillWidth+1, fillHeight+1,
+                                                                0xC0);
+                                                    
                                             }
                                     
-                                    
+                                            
                                             prevExists = TRUE;
+                                            
                                             SetAPen(rastport, 29);
 
                                             switch (shipSelected) {
@@ -769,7 +793,7 @@ void startPrg()
 
                                                             if (ship1[i+j*3] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
+                                                                if (!(mx + i * 32 + 32 * 3 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
                                                                     || my + j * 32 + win->BorderTop <= win->BorderTop || my + j*32 + win->BorderTop >= win->BorderTop + 16 * 32)) {
 
                                                                     RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
@@ -846,9 +870,9 @@ void startPrg()
                                                         for (int i = 0; i < 5; i++) {
                                                             if (ship5[i+j*5] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + win->BorderTop + j*32 >= MARGIN + 16 * 32)) {
-                                                        
+                                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 + win->BorderLeft + MARGIN <= win->BorderLeft
+                                                                    || my + win->BorderTop + j * 32 <= win->BorderTop + MARGIN || my + win->BorderTop + 32 + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                                        
                                                                     RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx+ win->BorderLeft + i*32+32, my+ win->BorderTop+j*32+32);
                                                                 }
                                                             }
@@ -986,7 +1010,7 @@ int cleanup() {
 
     void drawBoard(struct RastPort *rp) {
 
-        printBoard();
+        //printBoard();
         
         for (int j = 0; j < 16; j++) {
             for (int i = 0; i < 16; i++) {
