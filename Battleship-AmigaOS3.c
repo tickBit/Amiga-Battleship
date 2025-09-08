@@ -1,26 +1,26 @@
 /*
-    Battle ship game for Amiga a'la spaghetti...
+        Battle ship game for Amiga a'la spaghetti...
 
-    Version 1.2.0
+        Version 1.2.0
 
-    IMPORTANT:
+        IMPORTANT:
 
-    Can be (probably) ONLY be compiled with VBCC
-    --------------------------------------------
+        Can be (probably) ONLY be compiled with VBCC
+        --------------------------------------------
 
-    With VBCC: vc -c99 Battleship-AmigaOS3.c -o Battleship -lamiga -fpu=688881
+        With VBCC: vc -c99 Battleship-AmigaOS3.c -o Battleship -lamiga -fpu=688881
 
-    While compiling, you'll get a lot of warning from VBCC.
-    If necessary, increse stack (i.e. stack 20000 in AmigaDOS).
+        While compiling, you'll get a lot of warning from VBCC.
+        If necessary, increse stack (i.e. stack 20000 in AmigaDOS).
 
-    You can adjust the difficulty of the game by increasing or decreasing
-    constant DIFFICULTY (and variable error).
+        You can adjust the difficulty of the game by increasing or decreasing
+        constant DIFFICULTY (and variable error).
 
-    TODD:
-    - check EasyRequest
-    - Clear BltBitMapRastPort
-      - limit vertically to clearing area at the bottom
- */
+        TODD:
+        - check EasyRequest
+        - Clear BltBitMapRastPort
+        - limit vertically to clearing area at the bottom
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,9 +57,9 @@
 
 #define MARGIN 32
 
-/*
-    Below should be found from include files, but just in case...
-*/
+    /*
+        Below should be found from include files, but just in case...
+    */
 
 #define PDTA_DestMode		(DTA_Dummy + 251)
 #define PMODE_V43 (1)	/* Extended mode */
@@ -115,32 +115,32 @@ void             *vi;
 WORD borderTop;
 
 struct EasyStruct myES =
-{
-    sizeof(struct EasyStruct),
-    0,
-    "Info",
-    "All ships not placed",
-    "Ok",
-};
+    {
+        sizeof(struct EasyStruct),
+        0,
+        "Info",
+        "All ships not placed",
+        "Ok",
+    };
 
 struct BackFillInfo
-{
-	struct Hook            Hook;
-	struct Screen         *Screen;
-	Object                *PictureObject;
-	struct BitMapHeader   *BitMapHeader;
-	struct BitMap         *BitMap;
-	WORD                   CopyWidth;
-	WORD                   CopyHeight;
-};
+    {
+        struct Hook            Hook;
+        struct Screen         *Screen;
+        Object                *PictureObject;
+        struct BitMapHeader   *BitMapHeader;
+        struct BitMap         *BitMap;
+        WORD                   CopyWidth;
+        WORD                   CopyHeight;
+    };
 
 struct BackFillMsg
-{
-	struct Layer    *Layer;
-	struct Rectangle Bounds;
-	LONG             OffsetX;
-	LONG             OffsetY;
-};
+    {
+        struct Layer    *Layer;
+        struct Rectangle Bounds;
+        LONG             OffsetX;
+        LONG             OffsetY;
+    };
 
 BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 
@@ -151,1335 +151,1341 @@ struct BackFillInfo BF1, *Backfill;
 
 // these settings might ONLY work with VBCC compiler!
 void __saveds MyBackfillFunc(
-    __reg("a0") struct Hook *Hook,
-    __reg("a2") struct RastPort *rp,
-    __reg("a1") struct BackFillMessage *msg)
+        __reg("a0") struct Hook *Hook,
+        __reg("a2") struct RastPort *rp,
+        __reg("a1") struct BackFillMessage *msg)
 
-{
+    {
 
-    
-    struct BackFillInfo *bfi = (struct BackFillInfo *)Hook->h_Data;
+        
+        struct BackFillInfo *bfi = (struct BackFillInfo *)Hook->h_Data;
 
-    if (bfi == NULL || bfi->BitMap == NULL) return;
-	
-    int layerW = rp->Layer->ClipRect->bounds.MaxX - rp->Layer->ClipRect->bounds.MinX + 1;
-    int dx = (layerW - bfi->BitMapHeader->bmh_Width)  / 2;
-    int dy = bfi->Screen->BarHeight + 1;
+        if (bfi == NULL || bfi->BitMap == NULL) return;
+        
+        int layerW = rp->Layer->ClipRect->bounds.MaxX - rp->Layer->ClipRect->bounds.MinX + 1;
+        int dx = (layerW - bfi->BitMapHeader->bmh_Width)  / 2;
+        int dy = bfi->Screen->BarHeight + 1;
 
-    BltBitMapRastPort(bfi->BitMap,
-                  0, 0,
-                  rp,
-                  dx, dy,
-                  800, 800,
-                  0xC0, -1, NULL);
-}
+        BltBitMapRastPort(bfi->BitMap,
+                    0, 0,
+                    rp,
+                    dx, dy,
+                    800, 800,
+                    0xC0, -1, NULL);
+    }
 
 void startPrg()
 {
-    int width, height;
-    struct RastPort *rastport;
-    struct TextFont *font;
-    struct IntuiMessage *Message; 
-    struct InputEvent *ie;
-    BOOL Done;
+        int width, height;
+        struct RastPort *rastport;
+        struct TextFont *font;
+        struct IntuiMessage *Message; 
+        struct InputEvent *ie;
+        BOOL Done;
 
-    char name[] = "gfx/background.jpg";
+        char name[] = "gfx/background.jpg";
 
-    struct Screen *scr = LockPubScreen("Workbench");
-    glist = NULL;
+        struct Screen *scr = LockPubScreen("Workbench");
+        glist = NULL;
 
-    LONG Depth;
-    
-    srand(time(NULL));
+        LONG Depth;
+        
+        srand(time(NULL));
 
-    if ( (vi = GetVisualInfo(scr, TAG_END)) != NULL )
-    {
+        if ( (vi = GetVisualInfo(scr, TAG_END)) != NULL )
+        {
 
-        struct Gadget *gad;
+            struct Gadget *gad;
 
-        /* GadTools gadgets require this step to be taken */
-        gad = CreateContext(&glist);
+            /* GadTools gadgets require this step to be taken */
+            gad = CreateContext(&glist);
 
-        /* gadgets */
-        ng.ng_TextAttr   = &Topaz120;
-        ng.ng_VisualInfo = vi;
-        ng.ng_LeftEdge   = MARGIN+32*16+64;
-        ng.ng_TopEdge    = MARGIN+32*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-        ng.ng_Width      = 100;
-        ng.ng_Height     = 36;
-        ng.ng_GadgetText = "PLAY";
-        ng.ng_GadgetID   = PLAY_BUTTON;
-        ng.ng_Flags      = 0;
-        gads[PLAY_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
+            /* gadgets */
+            ng.ng_TextAttr   = &Topaz120;
+            ng.ng_VisualInfo = vi;
+            ng.ng_LeftEdge   = MARGIN+32*16+64;
+            ng.ng_TopEdge    = MARGIN+32*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 100;
+            ng.ng_Height     = 36;
+            ng.ng_GadgetText = "PLAY";
+            ng.ng_GadgetID   = PLAY_BUTTON;
+            ng.ng_Flags      = 0;
+            gads[PLAY_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
-        ng.ng_TextAttr   = &Topaz120;
-        ng.ng_VisualInfo = vi;
-        ng.ng_LeftEdge   = MARGIN+32;
-        ng.ng_TopEdge    = MARGIN+32*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-        ng.ng_Width      = 160;
-        ng.ng_Height     = 36;
-        ng.ng_GadgetText = "Undo ship";
-        ng.ng_GadgetID   = UNDO_BUTTON;
-        ng.ng_Flags      = 0;
-        gads[UNDO_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
+            ng.ng_TextAttr   = &Topaz120;
+            ng.ng_VisualInfo = vi;
+            ng.ng_LeftEdge   = MARGIN+32;
+            ng.ng_TopEdge    = MARGIN+32*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 160;
+            ng.ng_Height     = 36;
+            ng.ng_GadgetText = "Undo ship";
+            ng.ng_GadgetID   = UNDO_BUTTON;
+            ng.ng_Flags      = 0;
+            gads[UNDO_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
-        ng.ng_TextAttr   = &Topaz120;
-        ng.ng_VisualInfo = vi;
-        ng.ng_LeftEdge   = MARGIN+32*16+64;
-        ng.ng_TopEdge    = MARGIN+32*16+32+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-        ng.ng_Width      = 160;
-        ng.ng_Height     = 36;
-        ng.ng_GadgetText = "New game";
-        ng.ng_GadgetID   = NEWGAME_BUTTON;
-        ng.ng_Flags      = 0;
-        gads[NEWGAME_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
+            ng.ng_TextAttr   = &Topaz120;
+            ng.ng_VisualInfo = vi;
+            ng.ng_LeftEdge   = MARGIN+32*16+64;
+            ng.ng_TopEdge    = MARGIN+32*16+32+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 160;
+            ng.ng_Height     = 36;
+            ng.ng_GadgetText = "New game";
+            ng.ng_GadgetID   = NEWGAME_BUTTON;
+            ng.ng_Flags      = 0;
+            gads[NEWGAME_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
-        if (gad != NULL) {
+            if (gad != NULL) {
 
-            Backfill = &BF1;
-			memset(Backfill,0,sizeof(*Backfill));
+                Backfill = &BF1;
+                memset(Backfill,0,sizeof(*Backfill));
 
-			Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
+                Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
 
-            Backfill->Hook.h_Data = Backfill;
+                Backfill->Hook.h_Data = Backfill;
 
-            if (LoadPicture(Backfill, name, scr))
-            {
-				win = OpenWindowTags (NULL,
-					WA_Title, "Battle ship game for AmigaOS 3",
-                    WA_Top, 0,
-                    WA_Left, 80,
-					WA_InnerWidth, 800,
-					WA_InnerHeight, 800,
-                    WA_ReportMouse, TRUE,
-                    WA_RMBTrap, TRUE,
-                    WA_Gadgets, NULL,
-                    WA_SmartRefresh, TRUE,
-                    WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
-                    WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | IDCMP_GADGETUP | IDCMP_REFRESHWINDOW,
-                    WA_BackFill, &Backfill->Hook,
-                    TAG_END);
+                if (LoadPicture(Backfill, name, scr))
+                {
+                    win = OpenWindowTags (NULL,
+                        WA_Title, "Battle ship game for AmigaOS 3",
+                        WA_Top, 0,
+                        WA_Left, 80,
+                        WA_InnerWidth, 800,
+                        WA_InnerHeight, 800,
+                        WA_ReportMouse, TRUE,
+                        WA_RMBTrap, TRUE,
+                        WA_Gadgets, NULL,
+                        WA_SmartRefresh, TRUE,
+                        WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
+                        WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | IDCMP_GADGETUP | IDCMP_REFRESHWINDOW,
+                        WA_BackFill, &Backfill->Hook,
+                        TAG_END);
 
-				if (win) {
+                    if (win) {
 
-                    rastport = win->RPort;
-                    borderTop = win->BorderTop;
-                    
-                    
-                    //GT_RefreshWindow(win, NULL);
-
-                    if (!(myfont = (struct TextFont*)OpenDiskFont(&myta))) {
-                        printf("Failed to open CGTimes 72 font\nWill use Topaz 12...\n");
-                        myfont = (struct TextFont*)OpenFont(&Topaz120);
-                    }
-
-                    myfont2 = (struct TextFont*)OpenFont(&Topaz120);
-
-                    
-                    struct Gadget *gadEvent;
-
-			        ULONG MsgClass;
-			        UWORD MsgCode;
-			        
-                    BOOL allPlaced;
-
-                    Done = FALSE;
-                    BOOL prevExists = FALSE;
-
-                    int mx, my, pmx, pmy, fillWidth, fillHeight, bpmx, bpmy;
-
-                    state = START_SCREEN;
-                    
-                    /*
-                    *  Main event loop
-                    */
-                    do
-                    {
-
-                        if (state == START_SCREEN) {
-
-                            SetAPen(rastport, 55);
-                            SetFont(rastport, myfont);
-                            Move(rastport, (800-TextLength(rastport, "Battle ship", 11)) / 2, win->BorderTop+MARGIN + borderTop);
-                            Text(rastport, "Battle ship", 11);
-
-                            SetFont(rastport, myfont2);
-                            SetAPen(rastport, 41);
-                            Move(rastport, (800-TextLength(rastport, "Version 1.3.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                            Text(rastport, "Version 1.3.0", 13);
-
-                            Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
-                            Text(rastport, "Click anywhere in the window to continue", 40);
-                            
-                        }
-
-                        if (state != START_SCREEN) {
-                            drawGrid(rastport);
-                            drawShips(rastport);
-                            drawBoard(rastport);
-                        }
-
-                        if (state == PLACE_SHIPS) {
-                            SetAPen(rastport, 66);
-                            SetFont(rastport, myfont);
-                            Move(rastport, 32, MARGIN + 32*16+128);
-                            Text(rastport, "Positioning of ships", 20);
-                        }
-
-                        if (state == PLAY) {
-                            SetFont(rastport, myfont);
-                            SetAPen(rastport, 66);
-                            Move(rastport, 128, MARGIN + 32*16+128+32);
-                            Text(rastport, "Game on!", 8);
-
-                            SetFont(rastport, myfont2);
-                            
-                            SetAPen(rastport, 84);
-                            RectFill(rastport, 32, MARGIN + 32*16+160-16 + 32, 32+32, MARGIN + 32*16+160+32-16 + 32);
-                            SetAPen(rastport, 66);
-                            Move(rastport, 32+68, MARGIN + 32*16+160+32);
-                            Text(rastport, "Human player has hit AI's ship", 30);
-
-                            SetAPen(rastport, 83);
-                            RectFill(rastport, 32, MARGIN + 32*16+180 + 32, 32+32, MARGIN + 32*16+180+32 + 32);
-                            SetAPen(rastport, 66);
-                            Move(rastport, 32+68, MARGIN + 32*16+180+16+32);
-                            Text(rastport, "Human player has missed AI's ship", 33);
-                        }
+                        rastport = win->RPort;
+                        borderTop = win->BorderTop;
                         
-                        if ((AIHits == 23 || plyHits == 23) && state != GAME_OVER) {
-                            state = GAME_OVER;
+                        
+                        //GT_RefreshWindow(win, NULL);
 
-                            // clear a bit the screen...
-                                            BltBitMapRastPort(Backfill->BitMap,
-                                                0,MARGIN+32*16+70,
-                                                rastport,
-                                                win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
-                                                600, 180,
-                                            0xC0);
+                        if (!(myfont = (struct TextFont*)OpenDiskFont(&myta))) {
+                            printf("Failed to open CGTimes 72 font\nWill use Topaz 12...\n");
+                            myfont = (struct TextFont*)OpenFont(&Topaz120);
                         }
 
-                        if (state == GAME_OVER) {
-                            SetFont(rastport, myfont);
-                            SetAPen(rastport, 99);
-                            Move(rastport, 32, MARGIN + 32*16+128+88);
-                            if (AIHits == 23) {
-                                SetAPen(rastport, 62);
-                                Text(rastport, "GAME OVER - I WON ;-)", 21);
-                            } else {
-                                if (plyHits == 23) {
-                                    SetAPen(rastport, 83);
-                                    Text(rastport, "Congratulations! You won!", 25);
+                        myfont2 = (struct TextFont*)OpenFont(&Topaz120);
+
+                        
+                        struct Gadget *gadEvent;
+
+                        ULONG MsgClass;
+                        UWORD MsgCode;
+                        
+                        BOOL allPlaced;
+
+                        Done = FALSE;
+                        BOOL prevExists = FALSE;
+
+                        int mx, my, pmx, pmy, fillWidth, fillHeight, bpmx, bpmy;
+
+                        state = START_SCREEN;
+                        
+                        /*
+                        *  Main event loop
+                        */
+                        do
+                        {
+
+                            if (state == START_SCREEN) {
+
+                                SetAPen(rastport, 55);
+                                SetFont(rastport, myfont);
+                                Move(rastport, (800-TextLength(rastport, "Battle ship", 11)) / 2, win->BorderTop+MARGIN + borderTop);
+                                Text(rastport, "Battle ship", 11);
+
+                                SetFont(rastport, myfont2);
+                                SetAPen(rastport, 41);
+                                Move(rastport, (800-TextLength(rastport, "Version 1.3.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.3.0", 13);
+
+                                Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
+                                Text(rastport, "Click anywhere in the window to continue", 40);
+                                
+                            }
+
+                            if (state != START_SCREEN) {
+                                drawGrid(rastport);
+                                drawShips(rastport);
+                                drawBoard(rastport);
+                            }
+
+                            if (state == PLACE_SHIPS) {
+                                SetAPen(rastport, 66);
+                                SetFont(rastport, myfont);
+                                Move(rastport, 32, MARGIN + 32*16+128);
+                                Text(rastport, "Positioning of ships", 20);
+                            }
+
+                            if (state == PLAY) {
+                                SetFont(rastport, myfont);
+                                SetAPen(rastport, 66);
+                                Move(rastport, 128, MARGIN + 32*16+128+32);
+                                Text(rastport, "Game on!", 8);
+
+                                SetFont(rastport, myfont2);
+                                
+                                SetAPen(rastport, 84);
+                                RectFill(rastport, 32, MARGIN + 32*16+160-16 + 32, 32+32, MARGIN + 32*16+160+32-16 + 32);
+                                SetAPen(rastport, 66);
+                                Move(rastport, 32+68, MARGIN + 32*16+160+32);
+                                Text(rastport, "Human player has hit AI's ship", 30);
+
+                                SetAPen(rastport, 83);
+                                RectFill(rastport, 32, MARGIN + 32*16+180 + 32, 32+32, MARGIN + 32*16+180+32 + 32);
+                                SetAPen(rastport, 66);
+                                Move(rastport, 32+68, MARGIN + 32*16+180+16+32);
+                                Text(rastport, "Human player has missed AI's ship", 33);
+                            }
+                            
+                            if ((AIHits == 23 || plyHits == 23) && state != GAME_OVER) {
+                                state = GAME_OVER;
+
+                                // clear a bit the screen...
+                                                BltBitMapRastPort(Backfill->BitMap,
+                                                    0,MARGIN+32*16+70,
+                                                    rastport,
+                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
+                                                    600, 180,
+                                                0xC0);
+                            }
+
+                            if (state == GAME_OVER) {
+                                SetFont(rastport, myfont);
+                                SetAPen(rastport, 99);
+                                Move(rastport, 32, MARGIN + 32*16+128+88);
+                                
+                                if (AIHits == 23) {
+                                    SetAPen(rastport, 62);
+                                    Text(rastport, "GAME OVER - I WON ;-)", 21);
+                                } else {
+                                    if (plyHits == 23) {
+                                        SetAPen(rastport, 83);
+                                        Text(rastport, "Congratulations! You won!", 25);
+                                    }
                                 }
                             }
-                        }
 
-                        Wait(1 << win->UserPort->mp_SigBit);
-                        Message = (struct IntuiMessage *)GT_GetIMsg(win->UserPort);
-                        
-                        if (Message)
-                        {
+                            Wait(1 << win->UserPort->mp_SigBit);
+                            Message = (struct IntuiMessage *)GT_GetIMsg(win->UserPort);
                             
-                            MsgClass = Message->Class;
-                            MsgCode = Message->Code;
-
-                            switch(MsgClass)
+                            if (Message)
                             {
-                                case IDCMP_REFRESHWINDOW:
+                                
+                                MsgClass = Message->Class;
+                                MsgCode = Message->Code;
 
-                                    GT_RefreshWindow(win, NULL);
-                                    break;
+                                switch(MsgClass)
+                                {
+                                    case IDCMP_REFRESHWINDOW:
 
-                                case IDCMP_GADGETUP:
-                                    gadEvent = (struct Gadget *)Message->IAddress;
-
-
-                                    switch (gadEvent->GadgetID) {
-
-                                        case PLAY_BUTTON:
-                                            
-                                            if (state == PLAY || state == GAME_OVER) break;
-
-                                            allPlaced = TRUE;
-
-                                            for (int i = 0; i < 5; i++) {
-                                                if (shipsPlaced[i] == FALSE) {
-                                                    allPlaced = FALSE;
-                                                }
-                                            }
-
-                                            if (allPlaced == FALSE) {
-
-                                                EasyRequest(NULL, &myES, NULL, "(Variable)", NULL);
-                                                break;
-                                            }
-
-                                            placeComputersShips();
-
-                                            // clear a bit the screen...
-                                            /*
-                                            BltBitMapRastPort(Backfill->BitMap,
-                                                0,MARGIN+32*16+70,
-                                                rastport,
-                                                win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
-                                                , 120,
-                                            0xC0);
-                                            */
-
-                                            state = PLAY;
-                                            break;
-                                        case UNDO_BUTTON:
-                                            if (state != PLACE_SHIPS) break;
-                                            undoCurrentPositioning();
-                                            break;
-
-                                        case NEWGAME_BUTTON:
-
-                                            BltBitMapRastPort(Backfill->BitMap,
-                                                0, 0,
-                                                rastport,
-                                                win->BorderLeft, win->BorderTop,
-                                                800, 800,
-                                                0xC0);
-                                            RefreshGList(win->FirstGadget, win, NULL, -1);
-                                            initGame();
-
-                                            state = PLACE_SHIPS;
-                                            break;
-                                    
-                                    }
-
-                                    
-
-                                    break;
-
-                                case IDCMP_MOUSEBUTTONS:
-                                     // right mouse button to rotate ship
-                                    if (MsgCode == 233) {
-                                        
-                                        if (state == PLACE_SHIPS) {
-
-                                        switch (shipSelected) {
-
-                                            case 1:
-                                                rotateShip(ship1, 3, 1);
-                                                break;
-                                            case 2:
-                                                rotateShip(ship2, 3, 2);
-                                                break;
-
-                                            case 3:
-                                                rotateShip(ship3, 2, 3);
-                                                break;
-
-                                            case 4:
-                                                rotateShip(ship4, 4, 4);
-                                                break;
-
-                                            case 5:
-                                                rotateShip(ship5, 5, 5);
-                                                break;
-                                            
-                                        }
-                                        }
-
+                                        GT_RefreshWindow(win, NULL);
                                         break;
-                                    }
 
-                                    // right and left mousebutton related...
-                                    if (MsgCode == 105 || MsgCode == 104) break;
+                                    case IDCMP_GADGETUP:
+                                        gadEvent = (struct Gadget *)Message->IAddress;
 
-                                    // left mousebutton 
-                                    if (MsgCode == 232) {
 
-                                        if (prevExists) {
-                                            bpmx = mx;
-                                            bpmy = my;
-                                        }
+                                        switch (gadEvent->GadgetID) {
 
-                                        if (state == START_SCREEN) {
+                                            case PLAY_BUTTON:
+                                                
+                                                if (state == PLAY || state == GAME_OVER) break;
 
-                                        /*
-                                            BltBitMapRastPort(Backfill->BitMap,
-                                            0, 0,
-                                        rastport,
-                                        win->BorderLeft, win->BorderTop,
-                                        800, 800,
-                                        0xC0);
-                                        */
+                                                allPlaced = TRUE;
 
-                                        AddGList(win, &glist, 0, -1, NULL);
-                                        RefreshGList(win->FirstGadget, win, NULL, -1);
+                                                for (int i = 0; i < 5; i++) {
+                                                    if (shipsPlaced[i] == FALSE) {
+                                                        allPlaced = FALSE;
+                                                    }
+                                                }
 
-                                            state = PLACE_SHIPS;
-                                            break;
-                                        }
-                                        
-                                        
-                                        if (state == PLACE_SHIPS) {
+                                                if (allPlaced == FALSE) {
 
-                                        if (mx + win->BorderLeft >= MARGIN + 512 + 64 && mx + win->BorderLeft <= MARGIN + 512 + 64 + 32*3 && my + win->BorderTop >= win->BorderTop + MARGIN && my + win->BorderTop + win->BorderTop <= MARGIN + 32*3) {
-                                            if (shipsPlaced[0] == TRUE) break;
-                                            angle_ = 0;
-                                            shipSelected = 1;
-                                            initShip(1);
+                                                    EasyRequest(NULL, &myES, NULL, "(Variable)", NULL);
+                                                    break;
+                                                }
 
-                                            break;
-                                        }
+                                                placeComputersShips();
 
-                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*3 && my + win->BorderTop >= MARGIN + 32 + 32*2 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32 + 32) {
-                                            if (shipsPlaced[1] == TRUE) break;
-                                            angle_ = 0;
-                                            shipSelected = 2;
+                                                // clear a bit the screen...
+                                                /*
+                                                BltBitMapRastPort(Backfill->BitMap,
+                                                    0,MARGIN+32*16+70,
+                                                    rastport,
+                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
+                                                    , 120,
+                                                0xC0);
+                                                */
 
-                                            initShip(2);
-                                            break;
-                                        }
+                                                state = PLAY;
+                                                break;
+                                            case UNDO_BUTTON:
+                                                if (state != PLACE_SHIPS) break;
+                                                undoCurrentPositioning();
+                                                break;
 
-                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*2 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32) {
-                                            if (shipsPlaced[2] == TRUE) break;
-                                            angle_ = 0;
-                                            shipSelected = 3;
-
-                                            initShip(3);
-
-                                            break;
-                                        }
-
-                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*4 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4) {
-                                            if (shipsPlaced[3] == TRUE) break;
-                                            angle_ = 0;
-                                            shipSelected = 4;
-
-                                            initShip(4);
-
-                                            break;
-                                        }
-
-                                        if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*5 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 + 32*4 + 32) {
-                                            if (shipsPlaced[4] == TRUE) break;
-                                            angle_ = 0;
-                                            shipSelected = 5;
-
-                                            initShip(5);
-
-                                            break;
-                                        }
-
-                                        int bx = (mx+7) / 32;
-                                        int by = (my+7) / 32;
-
-                                        if (bx < 16 && by < 16) {
-
-                                            if (shipSelected != 0) {
+                                            case NEWGAME_BUTTON:
 
                                                 BltBitMapRastPort(Backfill->BitMap,
-                                                    bpmx, bpmy,
+                                                    0, 0,
                                                     rastport,
-                                                    bpmx+win->BorderLeft, bpmy+win->BorderTop,
-                                                    fillWidth+1, fillHeight+1,
-                                                0xC0);
+                                                    win->BorderLeft, win->BorderTop,
+                                                    800, 800,
+                                                    0xC0);
+                                                RefreshGList(win->FirstGadget, win, NULL, -1);
+                                                initGame();
+
+                                                state = PLACE_SHIPS;
+                                                break;
                                         
+                                        
+                                        }
+
+                                        
+
+                                        break;
+                                    
+                                    
+                                    case IDCMP_CLOSEWINDOW:
+                                            Done = TRUE;
+                                            break;
+                                            
+                                    case IDCMP_MOUSEBUTTONS:
+                                        // right mouse button to rotate ship
+                                        if (MsgCode == 233) {
+                                            
+                                            if (state == PLACE_SHIPS) {
+
                                                 switch (shipSelected) {
+
                                                     case 1:
-
-                                                        if (areaClear(&ship1, bx, by, 3)) {
-                                                            backupPreviousBoard(1);
-
-                                                            for (int j = 0; j < 3; j++) {
-                                                                for (int i = 0; i < 3; i++) {
-                                                                    if (ship1[i + j*3] == 1) {
-                                                                        board[bx + i + (by + j)*16] = 1;
-                                                                    }
-                                                                }
-                                                            }
-                                                            shipsPlaced[0] = TRUE;
-                                                            shipSelected = 0;
-                                                        }
+                                                        rotateShip(ship1, 3, 1);
                                                         break;
-
                                                     case 2:
-                                                        if (areaClear(&ship2, bx, by, 3)) {
-                                                            backupPreviousBoard(2);
-
-                                                            for (int j = 0; j < 3; j++) {
-                                                                for (int i = 0; i < 3; i++) {
-                                                                    if (ship2[i + j*3] == 1) {
-                                                                        board[bx + i + (by + j)*16] = 1;
-                                                                    }
-                                                                }
-                                                            }
-                                                            shipsPlaced[1] = TRUE;
-                                                            shipSelected = 0;
-                                                        }
+                                                        rotateShip(ship2, 3, 2);
                                                         break;
 
                                                     case 3:
-
-                                                        if (areaClear(&ship3, bx, by, 2)) {
-                                                            backupPreviousBoard(3);
-
-                                                            for (int j = 0; j < 2; j++) {
-                                                                for (int i = 0; i < 2; i++) {
-                                                                    if (ship3[i + j*2] == 1) {
-                                                                        board[bx + i + (by + j)*16] = 1;
-                                                                    }
-                                                                }
-                                                            }
-                                                            shipsPlaced[2] = TRUE;
-                                                            shipSelected = 0;
-                                                        }
+                                                        rotateShip(ship3, 2, 3);
                                                         break;
 
                                                     case 4:
-
-                                                        if (areaClear(&ship4, bx, by, 4)) {
-                                                            backupPreviousBoard(4);
-
-                                                            for (int j = 0; j < 4; j++) {
-                                                                for (int i = 0; i < 4; i++) {
-                                                                    if (ship4[i + j*4] == 1) {
-                                                                        board[bx + i + (by + j)*16] = 1;
-                                                                    }
-                                                                }
-                                                            }
-                                                            shipsPlaced[3] = TRUE;
-                                                            shipSelected = 0;
-                                                        }
+                                                        rotateShip(ship4, 4, 4);
                                                         break;
 
                                                     case 5:
-
-                                                        if (areaClear(&ship5, bx, by, 5)) {
-                                                            backupPreviousBoard(5);
-
-                                                            for (int j = 0; j < 5; j++) {
-                                                                for (int i = 0; i < 5; i++) {
-                                                                    if (ship5[i + j*5] == 1) {
-                                                                        board[bx + i + (by + j)*16] = 1;
-                                                                    }
-                                                                }
-                                                            }
-                                                            shipsPlaced[4] = TRUE;
-                                                            shipSelected = 0;
-                                                        }
+                                                        rotateShip(ship5, 5, 5);
                                                         break;
+
                                                 }
+                                            
+                                            }
+
+                                        }
+
+                                        // right and left mousebutton related...
+                                        if (MsgCode == 105 || MsgCode == 104) break;
+
+                                        // left mousebutton 
+                                        if (MsgCode == 232) {
+
+                                            if (prevExists) {
+                                                bpmx = mx;
+                                                bpmy = my;
+                                            }
+
+                                            if (state == START_SCREEN) {
+
+                                            /*
+                                                BltBitMapRastPort(Backfill->BitMap,
+                                                0, 0,
+                                            rastport,
+                                            win->BorderLeft, win->BorderTop,
+                                            800, 800,
+                                            0xC0);
+                                            */
+
+                                                AddGList(win, &glist, 0, -1, NULL);
+                                                RefreshGList(win->FirstGadget, win, NULL, -1);
+
+                                                state = PLACE_SHIPS;
                                                 break;
                                             }
-                                        }
-                                        
-                                    }
-                                    
-                                    if (state == PLAY) {
-                                        int bx = mx / 32 + MARGIN;
-                                        int by = my / 32 + MARGIN;
+                                            
+                                            
+                                            if (state == PLACE_SHIPS) {
 
-                                        if (bx >= 0 && bx < 16 & by >= 0 && by < 16) {
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + 512 + 64 + 32*3 && my + win->BorderTop >= win->BorderTop + MARGIN && my + win->BorderTop + win->BorderTop <= MARGIN + 32*3) {
+                                                    if (shipsPlaced[0] == TRUE) break;
+                                                    angle_ = 0;
+                                                    shipSelected = 1;
+                                                    initShip(1);
 
-                                            if (board[bx + by * 16] == 0) {
-                                                // player's miss
-                                                board[bx + by * 16] = 3;
-                                            } else {
-                                                // player's hit
-                                                if (board[bx + by *16] == 2) {
-                                                    board[bx + by * 16] = 4;
-                                                    plyHits++;
-                                                } else {
-                                                    printf("Choose another square\n");
                                                     break;
                                                 }
-                                            }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*3 && my + win->BorderTop >= MARGIN + 32 + 32*2 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32 + 32) {
+                                                    if (shipsPlaced[1] == TRUE) break;
+                                                    angle_ = 0;
+                                                    shipSelected = 2;
+
+                                                    initShip(2);
+                                                    break;
+                                                }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*2 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32) {
+                                                    if (shipsPlaced[2] == TRUE) break;
+                                                    angle_ = 0;
+                                                    shipSelected = 3;
+
+                                                    initShip(3);
+
+                                                    break;
+                                                }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*4 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4) {
+                                                    if (shipsPlaced[3] == TRUE) break;
+                                                    angle_ = 0;
+                                                    shipSelected = 4;
+
+                                                    initShip(4);
+
+                                                    break;
+                                                }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*5 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 + 32*4 + 32) {
+                                                    if (shipsPlaced[4] == TRUE) break;
+                                                    angle_ = 0;
+                                                    shipSelected = 5;
+
+                                                    initShip(5);
+
+                                                    break;
+                                                }
                                             
-                                            AImove();
+                                                int bx = (mx / 32);
+                                                int by = (my / 32);
+
+                                                if (bx < 16 && by < 16) {
+
+                                                    if (shipSelected != 0) {
+
+                                                        if (my + win->BorderTop + fillHeight + 1 > win->BorderTop + MARGIN + 512 + fillHeight + 1)
+                                                            fillHeight = my + fillHeight + 1 - 512 - MARGIN - win->BorderTop;
+
+                                                        BltBitMapRastPort(Backfill->BitMap,
+                                                            bpmx, bpmy,
+                                                            rastport,
+                                                            bpmx+win->BorderLeft, bpmy+win->BorderTop,
+                                                            fillWidth+1, fillHeight+1,
+                                                            0xC0);
+                                            
+                                                        switch (shipSelected) {
+                                                            case 1:
+
+                                                                if (areaClear(&ship1, bx, by, 3)) {
+                                                                    backupPreviousBoard(1);
+
+                                                                    for (int j = 0; j < 3; j++) {
+                                                                        for (int i = 0; i < 3; i++) {
+                                                                            if (ship1[i + j*3] == 1) {
+                                                                                board[bx + i + (by + j)*16] = 1;
+                                                                            }
+                                                                        }
+                                                                    }       
+                                                                    shipsPlaced[0] = TRUE;
+                                                                    shipSelected = 0;
+                                                                }
+                                                                break;
+
+                                                            case 2:
+                                                                if (areaClear(&ship2, bx, by, 3)) {
+                                                                    backupPreviousBoard(2);
+
+                                                                    for (int j = 0; j < 3; j++) {
+                                                                        for (int i = 0; i < 3; i++) {
+                                                                            if (ship2[i + j*3] == 1) {
+                                                                                board[bx + i + (by + j)*16] = 1;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    shipsPlaced[1] = TRUE;
+                                                                    shipSelected = 0;
+                                                                }
+                                                                break;
+
+                                                            case 3:
+                                                            
+                                                                if (areaClear(&ship3, bx, by, 2)) {
+                                                                    backupPreviousBoard(3);
+
+                                                                    for (int j = 0; j < 2; j++) {
+                                                                        for (int i = 0; i < 2; i++) {
+                                                                            if (ship3[i + j*2] == 1) {
+                                                                                board[bx + i + (by + j)*16] = 1;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    shipsPlaced[2] = TRUE;
+                                                                    shipSelected = 0;
+                                                                }
+                                                                break;
+
+                                                            case 4:
+                                                            
+                                                                if (areaClear(&ship4, bx, by, 4)) {
+                                                                    backupPreviousBoard(4);
+
+                                                                    for (int j = 0; j < 4; j++) {
+                                                                        for (int i = 0; i < 4; i++) {
+                                                                            if (ship4[i + j*4] == 1) {
+                                                                                board[bx + i + (by + j)*16] = 1;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    shipsPlaced[3] = TRUE;
+                                                                    shipSelected = 0;
+                                                                }
+                                                                break;
+
+                                                            case 5:
+                                                            
+                                                                if (areaClear(&ship5, bx, by, 5)) {
+                                                                    backupPreviousBoard(5);
+
+                                                                    for (int j = 0; j < 5; j++) {
+                                                                        for (int i = 0; i < 5; i++) {
+                                                                            if (ship5[i + j*5] == 1) {
+                                                                                board[bx + i + (by + j)*16] = 1;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    shipsPlaced[4] = TRUE;
+                                                                    shipSelected = 0;
+                                                                }
+                                                                break;
+                                                        }
+                                                    
+                                                    }
+                                            
+                                                }
+                                            
+                                                if (state == PLAY) {
+                                                    int bx = win->BorderLeft + mx / 32 + MARGIN;
+                                                    int by = win->BorderTop+ my / 32 + MARGIN;
+
+                                                    if (bx >= 0 && bx < 16 & by >= 0 && by < 16) {
+
+                                                        if (board[bx + by * 16] == 0) {
+                                                            // player's miss
+                                                            board[bx + by * 16] = 3;
+                                                        } else {
+                                                            // player's hit
+                                                            if (board[bx + by *16] == 2) {
+                                                                board[bx + by * 16] = 4;
+                                                                plyHits++;
+                                                            } else {
+                                                                printf("Choose another square\n");
+                                                                break;
+                                                            }
+                                                        }
+                                                
+                                                        AImove();
+
+                                                    }
+                                                }
+                                            
+                                            }
+                                            break;
+                                        }
+                                    case IDCMP_MOUSEMOVE:
+
+                                        if (prevExists) {
+                                            pmx = mx;
+                                            pmy = my;
+                                        }
+
+                                        // origo of coordinates at window frame's (0,0) 
+                                        mx = Message->MouseX;
+                                        my = Message->MouseY;          
+                                        
+                                        if (shipSelected != 0 && state == PLACE_SHIPS) {
+
+                                    //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
+
+                                    
+
+                                            if (prevExists) {
+                                        
+                                                BltBitMapRastPort(Backfill->BitMap,
+                                                    pmx, pmy,
+                                                    rastport,
+                                                    pmx+win->BorderLeft, pmy+win->BorderTop,
+                                                    fillWidth+1, fillHeight+1,
+                                                    0xC0);
+                                            }
+                                    
+                                    
+                                            prevExists = TRUE;
+                                            SetAPen(rastport, 29);
+
+                                            switch (shipSelected) {
+                                                case 1:
+
+                                                    fillWidth = 3*32;
+                                                    fillHeight = 3*32;
+
+                                                    for (int j = 0; j < 3; j++) {
+                                                        for (int i = 0; i < 3; i++) {
+
+                                                            if (ship1[i+j*3] == 1) {
+
+                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
+                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= win->BorderTop + 16 * 32)) {
+
+                                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
+                                                                }
+                                                            }
+                                                        } 
+                                                    }
+                                                    break;
+
+                                                case 2:
+                                                
+                                                    fillWidth = 3*32;
+                                                    fillHeight = 3*32;
+
+                                                    for (int j = 0; j < 3; j++) {
+                                                        for (int i = 0; i < 3; i++) {
+                                                            if (ship2[i+j*3] == 1) {
+
+                                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 + win->BorderLeft + MARGIN <= win->BorderLeft
+                                                                    || my + win->BorderTop + j * 32 <= win->BorderTop + MARGIN || my + win->BorderTop + 32 + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                        
+                                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + i*32+32 + win->BorderLeft, my+j*32+32 + win->BorderTop);
+                                                                    }
+                                                            }
+                                                        } 
+                                                    }
+                                                    break;
+
+                                                case 3:
+
+                                                    fillWidth = 2*32;
+                                                    fillHeight = 2*32;
+
+                                                    for (int j = 0; j < 2; j++) {
+                                                        for (int i = 0; i < 2; i++) {
+                                                            if (ship3[i+j*2] == 1) {
+
+                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
+                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                            
+
+                                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop , mx + win->BorderLeft+ i*32+32, my+j*32+32+ win->BorderTop);
+                                                                }
+                                                            }
+                                                        } 
+                                                    }
+                                                    break;
+
+                                                case 4:
+
+                                                    fillWidth = 4*32;
+                                                    fillHeight = 4*32;
+
+                                                    for (int j = 0; j < 4; j++) {
+                                                        for (int i = 0; i < 4; i++) {
+                                                            if (ship4[i+j*4] == 1) {
+
+                                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {                                                       
+                                                        
+                                                                        RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx +win->BorderLeft + i*32+32, my + win->BorderTop+j*32+32);
+                                                                }
+                                                            }
+                                                        } 
+                                                    }
+                                                    break;
+
+                                                case 5:
+
+                                                    fillHeight = 5*32;
+                                                    fillWidth = 5*32;
+
+                                                    for (int j = 0; j < 5; j++) {
+                                                        for (int i = 0; i < 5; i++) {
+                                                            if (ship5[i+j*5] == 1) {
+
+                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
+                                                        
+                                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx+ win->BorderLeft + i*32+32, my+ win->BorderTop+j*32+32);
+                                                                }
+                                                            }
+                                                        } 
+                                                    }
+                                                    break;
+                                                
+                                    
+                                            }                                                     
 
                                         }
-                                    }
-
                                     break;
                                 }
-                                case IDCMP_MOUSEMOVE:
-
-                                    if (prevExists) {
-                                        pmx = mx;
-                                        pmy = my;
-                                    }
-
-                                    // origo of coordinates at window frame's (0,0) 
-                                    mx = Message->MouseX;
-                                    my = Message->MouseY;          
-                                    
-                                    if (shipSelected != 0 && state == PLACE_SHIPS) {
-
-                                //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
-
-                                
-
-                                if (prevExists) {
-                                    
-                                    BltBitMapRastPort(Backfill->BitMap,
-                                        pmx, pmy,
-                                        rastport,
-                                        pmx+win->BorderLeft, pmy+win->BorderTop,
-                                        fillWidth+1, fillHeight+1,
-                                        0xC0);
-                                }
-                                
-                                
-                                prevExists = TRUE;
-                                SetAPen(rastport, 29);
-
-                                switch (shipSelected) {
-                                case 1:
-
-                                    fillWidth = 3*32;
-                                    fillHeight = 3*32;
-
-                                    for (int j = 0; j < 3; j++) {
-
-                                        for (int i = 0; i < 3; i++) {
-
-                                            if (ship1[i+j*3] == 1) {
-
-                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
-                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= win->BorderTop + 16 * 32)) {
-
-                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
-                                                    }
-                                            }
-                                        } 
-                                    }
-                                    break;
-
-                                case 2:
-
-                                    fillWidth = 3*32;
-                                    fillHeight = 3*32;
-
-                                    for (int j = 0; j < 3; j++) {
-                                        for (int i = 0; i < 3; i++) {
-                                            if (ship2[i+j*3] == 1) {
-
-                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft + MARGIN <= win->BorderLeft
-                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + 32 + j*32 >= 16 * 32)) {
-                                                      
-                                                    RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + i*32+32 + win->BorderLeft, my+j*32+32 + win->BorderTop);
-                                                    }
-                                            }
-                                        } 
-                                    }
-                                    break;
-
-                                case 3:
-
-                                fillWidth = 2*32;
-                                fillHeight = 2*32;
-
-                                    for (int j = 0; j < 2; j++) {
-                                        for (int i = 0; i < 2; i++) {
-                                            if (ship3[i+j*2] == 1) {
-
-                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
-                                                        
-
-                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop , mx + win->BorderLeft+ i*32+32, my+j*32+32+ win->BorderTop);
-                                                    }
-                                            }
-                                        } 
-                                    }
-                                    break;
-
-                                case 4:
-
-                                    fillWidth = 4*32;
-                                    fillHeight = 4*32;
-
-                                    for (int j = 0; j < 4; j++) {
-                                        for (int i = 0; i < 4; i++) {
-                                            if (ship4[i+j*4] == 1) {
-
-                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
-                                                       
-                                                    
-                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx +win->BorderLeft + i*32+32, my + win->BorderTop+j*32+32);
-                                                    }
-                                            }
-                                        } 
-                                    }
-                                    break;
-
-                                case 5:
-
-                                    fillHeight = 5*32;
-                                    fillWidth = 5*32;
-
-                                    for (int j = 0; j < 5; j++) {
-                                        for (int i = 0; i < 5; i++) {
-                                            if (ship5[i+j*5] == 1) {
-
-                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
-                                                       
-                                                RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx+ win->BorderLeft + i*32+32, my+ win->BorderTop+j*32+32);
-                                                    }
-                                            }
-                                        } 
-                                    }
-                                    break;
-                                }
+                                GT_ReplyIMsg((struct Message *)Message);
                             }
+                        } while(!Done);
 
-
-
-                                    break;
-
-                                case IDCMP_CLOSEWINDOW:
-                                    Done = TRUE;
-                                    break;
-
-                            }               
-
-                        }
-                        GT_ReplyIMsg((struct Message *)Message);
-
+                            //WaitTOF();
+                        CloseWindow(win);
+                    }
                         
-
-                        //WaitTOF();
-
-                    }   while(!Done);
-                     
-                
-                
-                CloseWindow(win);
+                    
+                    
+                    
+                    DisposeDTObject(Backfill->PictureObject);
                 }
-                DisposeDTObject(Backfill->PictureObject);
+                
             }
+                
             FreeGadgets(glist);
+
         }
             
-    }
+                
+    
     FreeVisualInfo(vi);
     UnlockPubScreen(NULL, scr);
 
     cleanup();
 }
 
-int main(int argc,char **argv)
-{
-
-	/* The program might need to ask for later versions of these libraries... */
-
-   	if(IntuitionBase == NULL)
+ int main(int argc,char **argv)
     {
-        IntuitionBase = OpenLibrary("intuition.library",39);
+
+        /* The program might need to ask for later versions of these libraries... */
+
         if(IntuitionBase == NULL)
-            return -1;
-    }
-
-    if (DataTypesBase == NULL)
-    {
-        DataTypesBase = OpenLibrary("datatypes.library",39);
-        if(DataTypesBase == NULL) {
-            
-            if (IntuitionBase != NULL) CloseLibrary(IntuitionBase);
-
-            return -1;
-        }
-    }
-
-    if (UtilityBase == NULL)
-    {
-        UtilityBase = OpenLibrary("utility.library",39);
-        if(UtilityBase == NULL) {
-            
-            if (DataTypesBase != NULL) CloseLibrary(DataTypesBase);
-            if (IntuitionBase != NULL) CloseLibrary(IntuitionBase);
-
-            return -1;
-        }
-    }
-
-	if (GfxBase == NULL) {
-		GfxBase = OpenLibrary("graphics.library",39);
-		if(GfxBase == NULL) {
-
-            if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
-            if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
-            if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
-
-            return -1;
+        {
+            IntuitionBase = OpenLibrary("intuition.library",39);
+            if(IntuitionBase == NULL)
+                return -1;
         }
 
-	}
+        if (DataTypesBase == NULL)
+        {
+            DataTypesBase = OpenLibrary("datatypes.library",39);
+            if(DataTypesBase == NULL) {
+                
+                if (IntuitionBase != NULL) CloseLibrary(IntuitionBase);
 
-    if (GadToolsBase == NULL) {
-        GadToolsBase = OpenLibrary("gadtools.library",39);
+                return -1;
+            }
+        }
+
+        if (UtilityBase == NULL)
+        {
+            UtilityBase = OpenLibrary("utility.library",39);
+            if(UtilityBase == NULL) {
+                
+                if (DataTypesBase != NULL) CloseLibrary(DataTypesBase);
+                if (IntuitionBase != NULL) CloseLibrary(IntuitionBase);
+
+                return -1;
+            }
+        }
+
+        if (GfxBase == NULL) {
+            GfxBase = OpenLibrary("graphics.library",39);
+            if(GfxBase == NULL) {
+
+                if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
+                if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
+                if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
+
+                return -1;
+            }
+
+        }
+
         if (GadToolsBase == NULL) {
+            GadToolsBase = OpenLibrary("gadtools.library",39);
+            if (GadToolsBase == NULL) {
 
-            if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
-            if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
-            if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
-            if (GfxBase!=NULL) CloseLibrary(GfxBase);
+                if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
+                if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
+                if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
+                if (GfxBase!=NULL) CloseLibrary(GfxBase);
 
-            return -1;
+                return -1;
+            }
         }
-    }
 
-    if (DiskfontBase == NULL) {
-        DiskfontBase = OpenLibrary("diskfont.library",39);
         if (DiskfontBase == NULL) {
+            DiskfontBase = OpenLibrary("diskfont.library",39);
+            if (DiskfontBase == NULL) {
 
-            if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
-            if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
-            if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
-            if (GfxBase!=NULL) CloseLibrary(GfxBase);
-            if (DiskfontBase!=NULL) CloseLibrary(DiskfontBase);
+                if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
+                if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
+                if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
+                if (GfxBase!=NULL) CloseLibrary(GfxBase);
+                if (DiskfontBase!=NULL) CloseLibrary(DiskfontBase);
 
-            return -1;
+                return -1;
+            }
         }
+
+        startPrg();
+
+
+        return 0;
+
     }
 
-	startPrg();
-
-
-	return 0;
-
-}
 
 int cleanup() {
 
-    if (DataTypesBase) CloseLibrary(DataTypesBase);
-    if (IntuitionBase) CloseLibrary(IntuitionBase);
-    if (UtilityBase) CloseLibrary(UtilityBase);
-	if (GfxBase) CloseLibrary(GfxBase);
-	
-    return;
+        if (DataTypesBase) CloseLibrary(DataTypesBase);
+        if (IntuitionBase) CloseLibrary(IntuitionBase);
+        if (UtilityBase) CloseLibrary(UtilityBase);
+        if (GfxBase) CloseLibrary(GfxBase);
+        
+        return;
 
-}
+    }
 
-void drawBoard(struct RastPort *rp) {
+    void drawBoard(struct RastPort *rp) {
 
-    for (int j = 0; j < 16; j++) {
-        for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 16; j++) {
+            for (int i = 0; i < 16; i++) {
 
-            // player's ship
-            if (board[i + j * 16] == 1) {
-                SetAPen(rp, 101);
-                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
-            }
-
-            // computer's ship
-            if (state == GAME_OVER && AIHits == 23) {
-                if (board[i + j * 16] == 2) {
-                    SetAPen(rp, 98);
+                // player's ship
+                if (board[i + j * 16] == 1) {
+                    SetAPen(rp, 101);
                     RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
                 }
-            }
 
-            // player's miss
-            if (board[i + j * 16] == 3) {
-                SetAPen(rp, 83);
-                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
-            }
-
-            // player's hit
-            if (board[i + j * 16] == 4) {
-                SetAPen(rp, 84);
-                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
-            }
-
-            // computer's miss
-            if (board[i + j * 16] == 5) {
-                SetAPen(rp, 88);
-                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
-            }
-
-            // computer's hit
-            if (board[i + j * 16] == 6) {
-                SetAPen(rp, 74);
-                RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
-            }
-
-            
-        }
-    }
-}
-
-void drawShips(struct RastPort *rp) {
-
-    SetAPen(rp, 129);
-
-    // draw ship 1
-    for (int j = 0; j < 3; j++) {
-        for (int i = 0; i < 3; i++) {
-            if (ship1_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32);
-        }
-    }
-
-    // draw ship 2
-    for (int j = 0; j < 3; j++) {
-        for (int i = 0; i < 3; i++) {
-            if (ship2_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+32);
-        }
-    }
-
-    // draw ship 3
-    for (int j = 0; j < 2; j++) {
-        for (int i = 0; i < 2; i++) {
-            if (ship3_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32);
-        }
-    }
-
-    // draw ship 4
-    for (int j = 0; j < 4; j++) {
-        for (int i = 0; i < 4; i++) {
-            if (ship4_[i+j*4] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32);
-        }
-    }
-
-    // draw ship 5
-    for (int j = 0; j < 5; j++) {
-        for (int i = 0; i < 5; i++) {
-            if (ship5_[i+j*5] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32*4+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32*4+32+32);
-        }
-    }
-}
-
-void drawGrid(struct RastPort *rp) {
-
-    SetAPen(rp, 100);
-    
-    Move(rp, MARGIN,MARGIN+borderTop);
-    Draw(rp, MARGIN+512,MARGIN+borderTop);
-
-    Move(rp, MARGIN+512,MARGIN+borderTop);
-    Draw(rp, MARGIN+512,MARGIN+512+borderTop);
-
-    Move(rp, MARGIN+512,MARGIN+512+borderTop);
-    Draw(rp, MARGIN, MARGIN+512+borderTop);
-
-    Move(rp, MARGIN, MARGIN+512+borderTop);
-    Draw(rp, MARGIN, MARGIN+borderTop);
-
-    for (int j = MARGIN+32; j < MARGIN+512; j+=32) {
-        Move(rp, MARGIN, j+borderTop);
-        Draw(rp, MARGIN+512, j+borderTop);
-    }
-
-    for (int i = MARGIN+32; i < MARGIN+512; i+=32) {
-        Move(rp, i, MARGIN+borderTop);
-        Draw(rp, i, MARGIN+512+borderTop);
-    }
-    
-}
-
-void printBoard() {
-    for (int j = 0; j < 16; j++) {
-        for (int i = 0; i < 16; i++) {
-            printf("%d",board[i+j*16]);
-        }
-        printf("\n");
-    }
-}
-
-void initShip(int n) {
-    switch(n) {
-        case 1:
-            for (int j = 0; j < 3; j++) {
-                for (int i = 0; i < 3; i++) {
-                    ship1[i+j*3] = ship1_[i+j*3];
-                }
-            }
-            break;
-
-        case 2:
-            for (int j = 0; j < 3; j++) {
-                for (int i = 0; i < 3; i++) {
-                    ship2[i+j*3] = ship2_[i+j*3];
-                }
-            }
-            break;
-
-        case 3:
-            for (int j = 0; j < 2; j++) {
-                for (int i = 0; i < 2; i++) {
-                    ship3[i+j*2] = ship3_[i+j*2];
-                }
-            }
-            break;
-        case 4:
-            for (int j = 0; j < 4; j++) {
-                for (int i = 0; i < 4; i++) {
-                    ship4[i+j*4] = ship4_[i+j*4];
-                }
-            }
-            break;
-
-        case 5:
-            for (int j = 0; j < 5; j++) {
-                for (int i = 0; i < 5; i++) {
-                    ship5[i+j*5] = ship5_[i+j*5];
-                }
-            }
-            break;
-    }
-}
-
-BOOL areaClear(int *ship, int x, int y, int length) {
-
-    for (int j = 0; j < length; j++) {
-        for (int i = 0; i < length; i++) {
-
-            if (ship[i+j*length] == 1) {
-                if (x+i < 0 || x+i > 15 || y+j > 15 || y+j < 0) return FALSE;
-                if (board[x+i+(y+j)*16] != 0) return FALSE;
-            }
-        }
-    }
-
-    return TRUE;
-}
-
-void AImove() {
-    
-    int AIx, AIy;
-
-    int piecesOfPly[23];
-
-    int k = 0;
-
-    int target, targetPoint;
-
-    BOOL again = FALSE;
-
-    do {
-        for (int j = 0; j < 16; j++) {
-            for (int i = 0; i < 16 i++) {
-
-                if (error > 0) {
-                // player's move
-                    if (board[i + j*16] == 1) {
-                        AIx = i + (rand() * 11341671) % error - (error-1);
-                        AIy = j + (rand() * 11341671) % error - (error-1);
-                        
-                        piecesOfPly[k] = AIx + AIy * 16 + (rand() * 11341671) % error - (error-1);
-                        k++;
-                    }
-                } else {
-                    if (board[i + j*16] == 1) {
-                        AIx = i;
-                        AIy = j;
-                        piecesOfPly[k] = AIx + AIy * 16;
-                        k++;
+                // computer's ship
+                if (state == GAME_OVER && AIHits == 23) {
+                    if (board[i + j * 16] == 2) {
+                        SetAPen(rp, 98);
+                        RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
                     }
                 }
+
+                // player's miss
+                if (board[i + j * 16] == 3) {
+                    SetAPen(rp, 83);
+                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                }
+
+                // player's hit
+                if (board[i + j * 16] == 4) {
+                    SetAPen(rp, 84);
+                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                }
+
+                // computer's miss
+                if (board[i + j * 16] == 5) {
+                    SetAPen(rp, 88);
+                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                }
+
+                // computer's hit
+                if (board[i + j * 16] == 6) {
+                    SetAPen(rp, 74);
+                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                }
+
                 
             }
         }
+    }
 
-        target = (rand() * 11341671) % (k+1);
+    void drawShips(struct RastPort *rp) {
+
+        SetAPen(rp, 129);
+
+        // draw ship 1
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 3; i++) {
+                if (ship1_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32-2, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32-2);
+            }
+        }
+
+        // draw ship 2
+        for (int j = 0; j < 3; j++) {
+            for (int i = 0; i < 3; i++) {
+                if (ship2_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+32);
+            }
+        }
+
+        // draw ship 3
+        for (int j = 0; j < 2; j++) {
+            for (int i = 0; i < 2; i++) {
+                if (ship3_[i+j*3] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32);
+            }
+        }
+
+        // draw ship 4
+        for (int j = 0; j < 4; j++) {
+            for (int i = 0; i < 4; i++) {
+                if (ship4_[i+j*4] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32);
+            }
+        }
+
+        // draw ship 5
+        for (int j = 0; j < 5; j++) {
+            for (int i = 0; i < 5; i++) {
+                if (ship5_[i+j*5] == 1) RectFill(rp, MARGIN+512+64+i*32, MARGIN+32+j*32 + 64+32+64+32+32+32+32*4+32+32, MARGIN+512+64+i*32+32, MARGIN+32+32+j*32 + 64+32+64+32+32+32+32*4+32+32);
+            }
+        }
+    }
+
+    void drawGrid(struct RastPort *rp) {
+
+        SetAPen(rp, 100);
         
-        targetPoint = piecesOfPly[target];
+        Move(rp, MARGIN,MARGIN+borderTop);
+        Draw(rp, MARGIN+512,MARGIN+borderTop);
 
-        AIx = (targetPoint % 16);
-        AIy = (targetPoint / 16); 
+        Move(rp, MARGIN+512,MARGIN+borderTop);
+        Draw(rp, MARGIN+512,MARGIN+512+borderTop);
 
-        k = 0;
+        Move(rp, MARGIN+512,MARGIN+512+borderTop);
+        Draw(rp, MARGIN, MARGIN+512+borderTop);
 
-        if (AIx < 0 || AIx > 15 || AIy < 0 || AIy > 15) {
-            again = TRUE;
+        Move(rp, MARGIN, MARGIN+512+borderTop);
+        Draw(rp, MARGIN, MARGIN+borderTop);
+
+        for (int j = MARGIN+32; j < MARGIN+512; j+=32) {
+            Move(rp, MARGIN, j+borderTop);
+            Draw(rp, MARGIN+512, j+borderTop);
+        }
+
+        for (int i = MARGIN+32; i < MARGIN+512; i+=32) {
+            Move(rp, i, MARGIN+borderTop);
+            Draw(rp, i, MARGIN+512+borderTop);
+        }
         
-        } else {
+    }
 
-            if (board[AIx + AIy * 16] == 1) {
-                board[AIx + AIy *16] = 6;
-                if (plyHits < 23) AIHits++;
-                again = FALSE;
+    void printBoard() {
+        for (int j = 0; j < 16; j++) {
+            for (int i = 0; i < 16; i++) {
+                printf("%d",board[i+j*16]);
+            }
+            printf("\n");
+        }
+    }
 
+    void initShip(int n) {
+        switch(n) {
+            case 1:
+                for (int j = 0; j < 3; j++) {
+                    for (int i = 0; i < 3; i++) {
+                        ship1[i+j*3] = ship1_[i+j*3];
+                    }
+                }
+                break;
+
+            case 2:
+                for (int j = 0; j < 3; j++) {
+                    for (int i = 0; i < 3; i++) {
+                        ship2[i+j*3] = ship2_[i+j*3];
+                    }
+                }
+                break;
+
+            case 3:
+                for (int j = 0; j < 2; j++) {
+                    for (int i = 0; i < 2; i++) {
+                        ship3[i+j*2] = ship3_[i+j*2];
+                    }
+                }
+                break;
+            case 4:
+                for (int j = 0; j < 4; j++) {
+                    for (int i = 0; i < 4; i++) {
+                        ship4[i+j*4] = ship4_[i+j*4];
+                    }
+                }
+                break;
+
+            case 5:
+                for (int j = 0; j < 5; j++) {
+                    for (int i = 0; i < 5; i++) {
+                        ship5[i+j*5] = ship5_[i+j*5];
+                    }
+                }
+                break;
+        }
+    }
+
+    BOOL areaClear(int *ship, int x, int y, int length) {
+
+        for (int j = 0; j < length; j++) {
+            for (int i = 0; i < length; i++) {
+
+                if (ship[i+j*length] == 1) {
+                    if (x+i < 0 || x+i > 15 || y+j > 15 || y+j < 0) return FALSE;
+                    if (board[x+i+(y+j)*16] != 0) return FALSE;
+                }
+            }
+        }
+
+        return TRUE;
+    }
+
+    void AImove() {
+        
+        int AIx, AIy;
+
+        int piecesOfPly[23];
+
+        int k = 0;
+
+        int target, targetPoint;
+
+        BOOL again = FALSE;
+
+        do {
+            for (int j = 0; j < 16; j++) {
+                for (int i = 0; i < 16 i++) {
+
+                    if (error > 0) {
+                    // player's move
+                        if (board[i + j*16] == 1) {
+                            AIx = i + (rand() * 11341671) % error - (error-1);
+                            AIy = j + (rand() * 11341671) % error - (error-1);
+                            
+                            piecesOfPly[k] = AIx + AIy * 16 + (rand() * 11341671) % error - (error-1);
+                            k++;
+                        }
+                    } else {
+                        if (board[i + j*16] == 1) {
+                            AIx = i;
+                            AIy = j;
+                            piecesOfPly[k] = AIx + AIy * 16;
+                            k++;
+                        }
+                    }
+                    
+                }
+            }
+
+            target = (rand() * 11341671) % (k+1);
+            
+            targetPoint = piecesOfPly[target];
+
+            AIx = (targetPoint % 16);
+            AIy = (targetPoint / 16); 
+
+            k = 0;
+
+            if (AIx < 0 || AIx > 15 || AIy < 0 || AIy > 15) {
+                again = TRUE;
+            
             } else {
-                if (board[AIx + AIy * 16] == 0) {
-                    board[AIx + AIy *16] = 5;
+
+                if (board[AIx + AIy * 16] == 1) {
+                    board[AIx + AIy *16] = 6;
+                    if (plyHits < 23) AIHits++;
                     again = FALSE;
 
                 } else {
-                    if (error > 0) {
-                        errorDelay+=DIFFICULTY;
-                        if (errorDelay >= 1.0f) {
-                            error--;
-                            errorDelay = 0.0f;
-                            again = TRUE;
-                        } else {
-                            again = TRUE;
+                    if (board[AIx + AIy * 16] == 0) {
+                        board[AIx + AIy *16] = 5;
+                        again = FALSE;
+
+                    } else {
+                        if (error > 0) {
+                            errorDelay+=DIFFICULTY;
+                            if (errorDelay >= 1.0f) {
+                                error--;
+                                errorDelay = 0.0f;
+                                again = TRUE;
+                            } else {
+                                again = TRUE;
+                            }
                         }
+                
                     }
-            
                 }
             }
+        } while(again);
+    }
+
+    void placeComputersShips() {
+
+        int *compShip;
+        int x, y, i, j;
+
+        // ship 1
+        compShip = &ship1;
+
+        j = (rand() * 11337799) % 4 + 1;
+        for (i = 1; i < j; i++) {
+            rotateShip(compShip, 3, i);
         }
-    } while(again);
-}
-
-void placeComputersShips() {
-
-    int *compShip;
-    int x, y, i, j;
-
-    // ship 1
-    compShip = &ship1;
-
-    j = (rand() * 11337799) % 4 + 1;
-    for (i = 1; i < j; i++) {
-        rotateShip(compShip, 3, i);
-    }
-    
-    x = (rand() * 11337799) % 13;
-    y = (rand() * 11337799) % 13;
-
-    while (!areaClear(compShip, x, y, 3)) {
-        x = (rand() * 12345678) % 13;
-        y = (rand() * 12345678) % 13;
-    }
-
-    for (j = 0; j < 3; j++) {
-        for (i = 0; i < 3; i++) {
-            if (compShip[i+j*3] == 1) board[x+i+(y+j)*16] = 2;
-        }
-    }
-
-    // ship 2
-    compShip = &ship2;
-
         
-    j = (rand() * 100) % 4 + 1;
-    for (i = 1; i < j; i++) {
-        rotateShip(compShip, 3, i);
-    }
-    
-
-    x = (rand() * 11337799) % 13;
-    y = (rand() * 11337799) % 13;
-
-    while (!areaClear(compShip, x, y, 3)) {
         x = (rand() * 11337799) % 13;
         y = (rand() * 11337799) % 13;
-    }
 
-    
-    for (j = 0; j < 3; j++) {
-        for (i = 0; i < 3; i++) {
-            if (compShip[i+j*3] == 1) board[x+i+(y+j)*16] = 2;
+        while (!areaClear(compShip, x, y, 3)) {
+            x = (rand() * 12345678) % 13;
+            y = (rand() * 12345678) % 13;
         }
-    }
 
-    // ship 3
+        for (j = 0; j < 3; j++) {
+            for (i = 0; i < 3; i++) {
+                if (compShip[i+j*3] == 1) board[x+i+(y+j)*16] = 2;
+            }
+        }
 
-    compShip = &ship3;
+        // ship 2
+        compShip = &ship2;
 
-    x = (rand() * 11337799) % 14;
-    y = (rand() * 11337799) % 14;
+            
+        j = (rand() * 100) % 4 + 1;
+        for (i = 1; i < j; i++) {
+            rotateShip(compShip, 3, i);
+        }
+        
 
-    while (!areaClear(compShip, x, y, 2)) {
+        x = (rand() * 11337799) % 13;
+        y = (rand() * 11337799) % 13;
+
+        while (!areaClear(compShip, x, y, 3)) {
+            x = (rand() * 11337799) % 13;
+            y = (rand() * 11337799) % 13;
+        }
+
+        
+        for (j = 0; j < 3; j++) {
+            for (i = 0; i < 3; i++) {
+                if (compShip[i+j*3] == 1) board[x+i+(y+j)*16] = 2;
+            }
+        }
+
+        // ship 3
+
+        compShip = &ship3;
+
         x = (rand() * 11337799) % 14;
         y = (rand() * 11337799) % 14;
-    }
 
-    for (j = 0; j < 2; j++) {
-        for (i = 0; i < 2; i++) {
-            if (compShip[i+j*2] == 1) board[x+i+(y+j)*16] = 2;
+        while (!areaClear(compShip, x, y, 2)) {
+            x = (rand() * 11337799) % 14;
+            y = (rand() * 11337799) % 14;
         }
-    }
 
-    // ship 4
+        for (j = 0; j < 2; j++) {
+            for (i = 0; i < 2; i++) {
+                if (compShip[i+j*2] == 1) board[x+i+(y+j)*16] = 2;
+            }
+        }
 
-    compShip = &ship4;
+        // ship 4
 
-    // random rotation of ship
-    j = (rand() * 11337799) % 4 + 1;
-    for (i = 1; i < j; i++) {
-        rotateShip(compShip, 4, i);
-    }
+        compShip = &ship4;
 
-    x = (rand() * 11337799) % 12;
-    y = (rand() * 11337799) % 12;
+        // random rotation of ship
+        j = (rand() * 11337799) % 4 + 1;
+        for (i = 1; i < j; i++) {
+            rotateShip(compShip, 4, i);
+        }
 
-    while (!areaClear(compShip, x, y, 4)) {
         x = (rand() * 11337799) % 12;
         y = (rand() * 11337799) % 12;
-    }
 
-    for (j = 0; j < 4; j++) {
-        for (i = 0; i < 4; i++) {
-            if (compShip[i+j*4] == 1) board[x+i+(y+j)*16] = 2;
+        while (!areaClear(compShip, x, y, 4)) {
+            x = (rand() * 11337799) % 12;
+            y = (rand() * 11337799) % 12;
         }
-    }
 
-    // ship 5
+        for (j = 0; j < 4; j++) {
+            for (i = 0; i < 4; i++) {
+                if (compShip[i+j*4] == 1) board[x+i+(y+j)*16] = 2;
+            }
+        }
 
-    compShip = &ship5;
+        // ship 5
 
-    // random rotation of ship
-    j = (rand() * 11337799) % 4 + 1;
-    for (i = 1; i < j; i++) {
-        rotateShip(compShip, 5, i);
-    }
+        compShip = &ship5;
 
-    x = (rand() * 11337799) % 11;
-    y = (rand() * 11337799) % 11;
+        // random rotation of ship
+        j = (rand() * 11337799) % 4 + 1;
+        for (i = 1; i < j; i++) {
+            rotateShip(compShip, 5, i);
+        }
 
-    while (!areaClear(compShip, x, y, 5)) {
         x = (rand() * 11337799) % 11;
         y = (rand() * 11337799) % 11;
+
+        while (!areaClear(compShip, x, y, 5)) {
+            x = (rand() * 11337799) % 11;
+            y = (rand() * 11337799) % 11;
+        }
+
+        for (j = 0; j < 5; j++) {
+            for (i = 0; i < 5; i++) {
+                if (compShip[i+j*5] == 1) board[x+i+(y+j)*16] = 2;
+            }
+        }
+
+        //printBoard();
+
+        return;
     }
 
-    for (j = 0; j < 5; j++) {
-        for (i = 0; i < 5; i++) {
-            if (compShip[i+j*5] == 1) board[x+i+(y+j)*16] = 2;
+    void initGame() {
+
+        for (int i = 0; i < 5; i++) {
+            shipsPlaced[i] = FALSE;
+        }
+
+        for (int i = 0; i < 16*16; i++) board[i] = 0;
+
+        shipSelected = 0;
+        error = 6;
+        errorDelay = 0.0f;
+        AIHits = 0;
+        plyHits = 0;
+
+    }
+
+    void backupPreviousBoard(int nr) {
+
+        undoShip = nr;
+        for (int i = 0; i < 16*16; i++) {
+            undoBoard[i] = board[i];
         }
     }
 
-    //printBoard();
+    void undoCurrentPositioning() {
 
-    return;
-}
-
-void initGame() {
-
-    for (int i = 0; i < 5; i++) {
-        shipsPlaced[i] = FALSE;
-    }
-
-    for (int i = 0; i < 16*16; i++) board[i] = 0;
-
-    shipSelected = 0;
-    error = 6;
-    errorDelay = 0.0f;
-    AIHits = 0;
-    plyHits = 0;
-
-}
-
-void backupPreviousBoard(int nr) {
-
-    undoShip = nr;
-    for (int i = 0; i < 16*16; i++) {
-        undoBoard[i] = board[i];
-    }
-}
-
-void undoCurrentPositioning() {
-
-    for (int i = 0; i < 16*16; i++) {
-        board[i] = undoBoard[i];
-    }
-
-    shipsPlaced[undoShip-1] = FALSE;
-
-}
-
-int rotateShip(int *ship, int length, int nr) {
-
-    int rotatedShip[length*length];
-
-    angle_+=1;
-    if (angle_ == 5) {
-        angle_ = 1;
-        initShip(nr);
-    }
-
-    switch (angle_) {
-        case 1:
-
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[(length-i-1)+j*length] == 1) rotatedShip[i*length + j] = 1; else rotatedShip[i*length+j] = 0;
-                }
-            }
-            break;
-
-        case 2:
-
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[i + j*length] == 1) rotatedShip[j + (length-i-1)*length] = 1; else rotatedShip[j + (length-i-1)*length] = 0;
-                }
-            }
-
-            break;
-        case 3:
-            
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[(length-i-1) +(length-j-1)*length] == 1) rotatedShip[i*length + (length-j-1)] = 1; else rotatedShip[i*length + (length-j-1)] = 0;
-                }
-            }
-            break;
-
-        case 4:
-       
-            for (int j = 0; j < length; j++) {
-                for (int i = 0; i < length; i++) {
-                    if (ship[i + j*length] == 1) rotatedShip[(length-i-1)*length + j] = 1; else rotatedShip[(length-i-1)*length + j] = 0;
-                }
-            }
-            
-            break;
-
-    }
-
-    /* print ship */
-    /*
-    printf("\n")
-    for (int j = 0; j < length; j++) {
-        for (int i = 0; i < length; i++) {
-            if (rotatedShip[i + j*length] == 1) printf("1"); else printf("0");
+        for (int i = 0; i < 16*16; i++) {
+            board[i] = undoBoard[i];
         }
-        printf("\n");
-    }
-    */
 
-    for (int j = 0; j < length; j++) {
-        for (int i = 0; i < length; i++) {
-            ship[i + j*length] = rotatedShip[i + j*length];
+        shipsPlaced[undoShip-1] = FALSE;
+
+    }
+
+    int rotateShip(int *ship, int length, int nr) {
+
+        int rotatedShip[length*length];
+
+        angle_+=1;
+        if (angle_ == 5) {
+            angle_ = 1;
+            initShip(nr);
         }
+
+        switch (angle_) {
+            case 1:
+
+                for (int j = 0; j < length; j++) {
+                    for (int i = 0; i < length; i++) {
+                        if (ship[(length-i-1)+j*length] == 1) rotatedShip[i*length + j] = 1; else rotatedShip[i*length+j] = 0;
+                    }
+                }
+                break;
+
+            case 2:
+
+                for (int j = 0; j < length; j++) {
+                    for (int i = 0; i < length; i++) {
+                        if (ship[i + j*length] == 1) rotatedShip[j + (length-i-1)*length] = 1; else rotatedShip[j + (length-i-1)*length] = 0;
+                    }
+                }
+
+                break;
+            case 3:
+                
+                for (int j = 0; j < length; j++) {
+                    for (int i = 0; i < length; i++) {
+                        if (ship[(length-i-1) +(length-j-1)*length] == 1) rotatedShip[i*length + (length-j-1)] = 1; else rotatedShip[i*length + (length-j-1)] = 0;
+                    }
+                }
+                break;
+
+            case 4:
+        
+                for (int j = 0; j < length; j++) {
+                    for (int i = 0; i < length; i++) {
+                        if (ship[i + j*length] == 1) rotatedShip[(length-i-1)*length + j] = 1; else rotatedShip[(length-i-1)*length + j] = 0;
+                    }
+                }
+                
+                break;
+
+        }
+
+        /* print ship */
+        /*
+        printf("\n")
+        for (int j = 0; j < length; j++) {
+            for (int i = 0; i < length; i++) {
+                if (rotatedShip[i + j*length] == 1) printf("1"); else printf("0");
+            }
+            printf("\n");
+        }
+        */
+
+        for (int j = 0; j < length; j++) {
+            for (int i = 0; i < length; i++) {
+                ship[i + j*length] = rotatedShip[i + j*length];
+            }
+        }
+        
     }
-    
-}
 
 
-/* ---------------------------------------------------------------------- */
-/* Load a picture via datatypes                                           */
-/* ---------------------------------------------------------------------- */
-BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename, struct Screen *scr)
-{
-    bfi->PictureObject = NewDTObject(filename,
-                            DTA_SourceType       ,DTST_FILE,
-		                                     DTA_GroupID          ,GID_PICTURE,
-		                                     PDTA_Remap           ,TRUE,
-                                             PDTA_DestBitMap      ,(ULONG)&bfi->BitMap,
-                                             PDTA_DestMode        ,PMODE_V43,
-		                                     TAG_DONE);
+    /* ---------------------------------------------------------------------- */
+    /* Load a picture via datatypes                                           */
+    /* ---------------------------------------------------------------------- */
+    BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename, struct Screen *scr)
+    {
+        bfi->PictureObject = NewDTObject(filename,
+                                DTA_SourceType       ,DTST_FILE,
+                                                DTA_GroupID          ,GID_PICTURE,
+                                                PDTA_Remap           ,TRUE,
+                                                PDTA_DestBitMap      ,(ULONG)&bfi->BitMap,
+                                                PDTA_DestMode        ,PMODE_V43,
+                                                TAG_DONE);
 
-    if (!bfi->PictureObject) return FALSE;
+        if (!bfi->PictureObject) return FALSE;
 
-    DoMethod (bfi->PictureObject, DTM_PROCLAYOUT, NULL, TRUE);
+        DoMethod (bfi->PictureObject, DTM_PROCLAYOUT, NULL, TRUE);
 
-    struct BitMapHeader *bmhd;
-    struct BitMap *bm;
+        struct BitMapHeader *bmhd;
+        struct BitMap *bm;
 
-    GetDTAttrs (bfi->PictureObject,
-                PDTA_BitMapHeader, &bmhd,
-                PDTA_BitMap, &bm,
-                TAG_END);
-	
-    if (!bmhd || !bm) return FALSE;
+        GetDTAttrs (bfi->PictureObject,
+                    PDTA_BitMapHeader, &bmhd,
+                    PDTA_BitMap, &bm,
+                    TAG_END);
+        
+        if (!bmhd || !bm) return FALSE;
 
-    bfi->Screen = scr;
-    bfi->BitMap = bm;
-    bfi->BitMapHeader = bmhd;
-    bfi->CopyWidth  = bmhd->bmh_Width;
-    bfi->CopyHeight = bmhd->bmh_Height;
-	
-    return TRUE;
-}
+        bfi->Screen = scr;
+        bfi->BitMap = bm;
+        bfi->BitMapHeader = bmhd;
+        bfi->CopyWidth  = bmhd->bmh_Width;
+        bfi->CopyHeight = bmhd->bmh_Height;
+        
+        return TRUE;
+    }
