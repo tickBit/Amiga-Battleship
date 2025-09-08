@@ -286,7 +286,7 @@ void startPrg()
                         Done = FALSE;
                         BOOL prevExists = FALSE;
 
-                        int mx, my, pmx, pmy, fillWidth, fillHeight, bpmx, bpmy;
+                        int bx, by, mx, my, pmx, pmy, fillWidth, fillHeight, bpmx, bpmy;
 
                         state = START_SCREEN;
                         
@@ -525,61 +525,29 @@ void startPrg()
                                             
                                             if (state == PLACE_SHIPS) {
 
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + 512 + 64 + 32*3 && my + win->BorderTop >= win->BorderTop + MARGIN && my + win->BorderTop + win->BorderTop <= MARGIN + 32*3) {
-                                                    if (shipsPlaced[0] == TRUE) break;
-                                                    angle_ = 0;
-                                                    shipSelected = 1;
-                                                    initShip(1);
-
-                                                    break;
-                                                }
-
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*3 && my + win->BorderTop >= MARGIN + 32 + 32*2 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32 + 32) {
-                                                    if (shipsPlaced[1] == TRUE) break;
-                                                    angle_ = 0;
-                                                    shipSelected = 2;
-
-                                                    initShip(2);
-                                                    break;
-                                                }
-
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*2 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32) {
-                                                    if (shipsPlaced[2] == TRUE) break;
-                                                    angle_ = 0;
-                                                    shipSelected = 3;
-
-                                                    initShip(3);
-
-                                                    break;
-                                                }
-
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*4 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4) {
-                                                    if (shipsPlaced[3] == TRUE) break;
-                                                    angle_ = 0;
-                                                    shipSelected = 4;
-
-                                                    initShip(4);
-
-                                                    break;
-                                                }
-
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*5 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 + 32*4 + 32) {
-                                                    if (shipsPlaced[4] == TRUE) break;
-                                                    angle_ = 0;
-                                                    shipSelected = 5;
-
-                                                    initShip(5);
-
-                                                    break;
-                                                }
-                                            
-                                                int bx = (mx / 32);
-                                                int by = (my / 32);
-
-                                                if (bx < 16 && by < 16) {
-
-                                                    if (shipSelected != 0) {
-
+                                                if (shipSelected != 0) {
+                                                    int height = 0;
+                                                    
+                                                    switch (shipSelected) {
+                                                        case 1:
+                                                            height = 3;
+                                                        case 2:
+                                                            height = 3;
+                                                        case 3:
+                                                            height = 2;
+                                                        case 4:
+                                                            height = 4;
+                                                        case 5:
+                                                            height = 5;
+                                                    }
+                                                    
+                                                    bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 2;
+                                                    by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                    
+                                                    printf("bx = %D :: by = %d\n", bx, by);
+                                                    
+                                                    if (bx < 16 && by < 16) {
+                                                    
                                                         if (my + win->BorderTop + fillHeight + 1 > win->BorderTop + MARGIN + 512 + fillHeight + 1)
                                                             fillHeight = my + fillHeight + 1 - 512 - MARGIN - win->BorderTop;
 
@@ -675,14 +643,65 @@ void startPrg()
                                                                 }
                                                                 break;
                                                         }
-                                                    
                                                     }
-                                            
+                                                    break;
                                                 }
+                                                
+                                                
+                                                    
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 + 32 && mx + win->BorderLeft + MARGIN <= MARGIN + win->BorderLeft + 512 + 64 + 32 + 32*3 && my + win->BorderTop >= win->BorderTop + MARGIN && my + win->BorderTop <= MARGIN + win->BorderTop + 32*3) {
+                                                        if (shipsPlaced[0] == TRUE) break;
+                                                        angle_ = 0;
+                                                        shipSelected = 1;
+                                                        initShip(1);
+
+                                                        break;
+                                                }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*3 && my + win->BorderTop >= MARGIN + 32 + 32*2 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32 + 32) {
+                                                        if (shipsPlaced[1] == TRUE) break;
+                                                        angle_ = 0;
+                                                        shipSelected = 2;
+
+                                                        initShip(2);
+                                                        break;
+                                                }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*2 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32) {
+                                                        if (shipsPlaced[2] == TRUE) break;
+                                                        angle_ = 0;
+                                                        shipSelected = 3;
+
+                                                        initShip(3);
+
+                                                        break;
+                                                }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*4 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 && my + win->BorderTop <= MARGIN + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4) {
+                                                        if (shipsPlaced[3] == TRUE) break;
+                                                        angle_ = 0;
+                                                        shipSelected = 4;
+
+                                                        initShip(4);
+
+                                                        break;
+                                                }
+
+                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 512 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 512 + 64 + 32*5 && my + win->BorderTop >= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 && my + win->BorderTop <= MARGIN + win->BorderTop + 32 + 32*2 + 32 + 32 + 32*2 + 32 + 32*4 + 32 + 32*4 + 32) {
+                                                        if (shipsPlaced[4] == TRUE) break;
+                                                        angle_ = 0;
+                                                        shipSelected = 5;
+
+                                                        initShip(5);
+
+                                                        break;
+                                                
+                                                }
+                                                
                                             
                                                 if (state == PLAY) {
-                                                    int bx = win->BorderLeft + mx / 32 + MARGIN;
-                                                    int by = win->BorderTop+ my / 32 + MARGIN;
+                                                    bx = mx / 32;
+                                                    by = my / 32;
 
                                                     if (bx >= 0 && bx < 16 & by >= 0 && by < 16) {
 
@@ -691,7 +710,7 @@ void startPrg()
                                                             board[bx + by * 16] = 3;
                                                         } else {
                                                             // player's hit
-                                                            if (board[bx + by *16] == 2) {
+                                                            if (board[bx + by * 16] == 2) {
                                                                 board[bx + by * 16] = 4;
                                                                 plyHits++;
                                                             } else {
@@ -751,7 +770,7 @@ void startPrg()
                                                             if (ship1[i+j*3] == 1) {
 
                                                                 if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
-                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= win->BorderTop + 16 * 32)) {
+                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + j*32 + win->BorderTop >= win->BorderTop + 16 * 32)) {
 
                                                                     RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
                                                                 }
@@ -773,7 +792,7 @@ void startPrg()
                                                                     || my + win->BorderTop + j * 32 <= win->BorderTop + MARGIN || my + win->BorderTop + 32 + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
                                                         
                                                                     RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx + i*32+32 + win->BorderLeft, my+j*32+32 + win->BorderTop);
-                                                                    }
+                                                                }
                                                             }
                                                         } 
                                                     }
@@ -788,7 +807,7 @@ void startPrg()
                                                         for (int i = 0; i < 2; i++) {
                                                             if (ship3[i+j*2] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 + win->BorderLeft <= win->BorderLeft
+                                                                if (!(mx + i * 32 + 32 + win->BorderLeft + MARGIN >= 800-1 - win->BorderRight + win->BorderLeft + MARGIN || mx + i * 32 + win->BorderLeft <= win->BorderLeft
                                                                     || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= MARGIN + 16 * 32 + win->BorderTop)) {
                                                             
 
@@ -808,8 +827,8 @@ void startPrg()
                                                         for (int i = 0; i < 4; i++) {
                                                             if (ship4[i+j*4] == 1) {
 
-                                                                if (!(mx + i * 32 + 32 >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {                                                       
+                                                                if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 + win->BorderTop >= MARGIN + 16 * 32 + win->BorderTop)) {                                                       
                                                         
                                                                         RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx +win->BorderLeft + i*32+32, my + win->BorderTop+j*32+32);
                                                                 }
@@ -828,7 +847,7 @@ void startPrg()
                                                             if (ship5[i+j*5] == 1) {
 
                                                                 if (!(mx + i * 32 + 32 + win->BorderLeft >= 800-1 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + 32 + j*32 >= MARGIN + 16 * 32)) {
+                                                                    || my + j * 32 + win->BorderTop <= win->BorderTop || my + win->BorderTop + j*32 >= MARGIN + 16 * 32)) {
                                                         
                                                                     RectFill(rastport, mx + i*32 + win->BorderLeft, my + j*32 + win->BorderTop, mx+ win->BorderLeft + i*32+32, my+ win->BorderTop+j*32+32);
                                                                 }
@@ -967,13 +986,15 @@ int cleanup() {
 
     void drawBoard(struct RastPort *rp) {
 
+        printBoard();
+        
         for (int j = 0; j < 16; j++) {
             for (int i = 0; i < 16; i++) {
 
                 // player's ship
                 if (board[i + j * 16] == 1) {
                     SetAPen(rp, 101);
-                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32 + win->BorderTop, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1 + win->BorderTop);
                 }
 
                 // computer's ship
