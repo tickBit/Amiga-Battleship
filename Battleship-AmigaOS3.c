@@ -566,11 +566,7 @@ void startPrg()
                                             break;
                                             
                                     case IDCMP_MOUSEBUTTONS:         
-                                        
-                                        printf();
-                                        printBoard();
-                                        printf();
-                                        
+                                       
                                         // right mouse button to rotate ship
                                         if (code == 233) {
                                             
