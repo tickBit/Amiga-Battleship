@@ -20,6 +20,7 @@
         - check EasyRequest
         - Clear BltBitMapRastPort
         - limit vertically to clearing area at the bottom
+        - in-game coordinates..
 */
 
 #include <stdio.h>
@@ -193,6 +194,8 @@ void startPrg()
         
         struct Hook backfillHook;
         
+        BOOL clipInstalled = FALSE;
+        
         int width, height;
         struct RastPort *rastport;
         struct TextFont *font;
@@ -281,32 +284,15 @@ void startPrg()
 
                     if (win) {
     
-                        clipRegion = (struct Region *)NewRegion();
-                        rect.MinX = win->BorderLeft; rect.MinY = win->BorderTop;
-                        rect.MaxX = win->BorderLeft + 801; rect.MaxY = win->BorderTop + 801;
-                        OrRectRegion(clipRegion, &rect);
+                        BOOL gridRegion = FALSE;
+                        
+                        //clipRegion = (struct Region *)NewRegion();
+                        //rect.MinX = win->BorderLeft; rect.MinY = win->BorderTop;
+                        //rect.MaxX = win->BorderLeft + 801; rect.MaxY = win->BorderTop + 801;
+                        //OrRectRegion(clipRegion, &rect);
                         
                         struct Region *old;
-   
-                        BOOL clipInstalled = FALSE;
-                        
-                        
-                        if (!clipInstalled) {
-                        
-                        WaitBlit();            
-                        if (win->WLayer && win->WScreen) {
-                  
-                            LockLayer(0, win->WLayer);
-                            {                        
-                                struct Region *old = (struct Region *)InstallClipRegion(win->WLayer, clipRegion);                     
-                                if (old && old != clipRegion) DisposeRegion(old);
-                            }
-                            UnlockLayer(win->WLayer);
-                            clipInstalled = TRUE;
-                            }
-                        }
-                        
-                        
+                                                
                         
                         
                         rastport = win->RPort;
@@ -324,7 +310,7 @@ void startPrg()
                         struct Gadget *gadEvent;
 
                         ULONG MsgClass;
-                        UWORD MsgCode;
+                        UWORD code;
                         
                         BOOL allPlaced;
 
@@ -341,7 +327,7 @@ void startPrg()
                         /*
                         *  Main event loop
                         */
-                        do
+                        while(!Done)
                         {
 
                             
@@ -426,15 +412,23 @@ void startPrg()
                             }
 
                             Wait(1 << win->UserPort->mp_SigBit);
-                            Message = (struct IntuiMessage *)GT_GetIMsg(win->UserPort);
-                            
-                            if (Message)
+                            while ((Message = (struct IntuiMessage *)GT_GetIMsg(win->UserPort)))
                             {
                                 
-                                MsgClass = Message->Class;
-                                MsgCode = Message->Code;
+                                ULONG cls =  Message->Class;
+                                ULONG code = Message->Code;
                                 
-                                switch(MsgClass)
+                                if (prevExists) {
+                                    pmx = mx;
+                                    pmy = my;
+                                }
+                                
+                                mx = Message->MouseX;
+                                my = Message->MouseY;
+                                
+                                GT_ReplyIMsg((struct Message *)Message);
+                                
+                                switch(cls)
                                 {
                                     case IDCMP_REFRESHWINDOW:
     
@@ -511,7 +505,7 @@ void startPrg()
                                     case IDCMP_MOUSEBUTTONS:         
                                         
                                         // right mouse button to rotate ship
-                                        if (MsgCode == 233) {
+                                        if (code == 233) {
                                             
                                             if (state == PLACE_SHIPS) {
 
@@ -543,10 +537,10 @@ void startPrg()
                                         }
 
                                         // right and left mousebutton related...
-                                        if (MsgCode == 105 || MsgCode == 104) break;
+                                        if (code == 105 || code == 104) break;
 
                                         // left mousebutton 
-                                        if (MsgCode == 232) {
+                                        if (code == 232) {
 
                                             if (prevExists) {
                                                 bpmx = mx;
@@ -568,13 +562,16 @@ void startPrg()
                                                 RefreshGList(win->FirstGadget, win, NULL, -1);
 
                                                 state = PLACE_SHIPS;
+                                                
+                                                
+                                                
                                                 break;
                                             
                                             }
                                             
                                             
                                             if (state == PLACE_SHIPS) {
-
+                        
                                                 if (shipSelected != 0) {
                                                     int height = 0;
                                                     
@@ -771,7 +768,7 @@ void startPrg()
                                             break;
                                         }
                                     case IDCMP_MOUSEMOVE:
-                                         
+                                         /*
                                         if (prevExists) {
                                             pmx = mx;
                                             pmy = my;
@@ -780,88 +777,68 @@ void startPrg()
                                         // origo of coordinates at window frame's (0,0) 
                                         mx = Message->MouseX;
                                         my = Message->MouseY;          
-                                        
+                                        */
                                         if (shipSelected != 0 && state == PLACE_SHIPS) {
+                                            
+                                            // as long as these settings are in order, in-game texts can't be printed
+                                            if (gridRegion == FALSE) {
+                                                    clipRegion = (struct Region *)NewRegion();
+                                                    rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
+                                                    rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;
+                                                    OrRectRegion(clipRegion, &rect);
+                            
+                                                    struct Region *old;
+                                                    
+                                                    WaitBlit();            
+                                                    if (win->WLayer && win->WScreen) {
+                    
+                                                        LockLayer(0, win->WLayer);
+                                                        {                        
+                                                            struct Region *old = (struct Region *)InstallClipRegion(win->WLayer, clipRegion);                     
+                                                            if (old && old != clipRegion) DisposeRegion(old);
+                                                        }
+                                                        UnlockLayer(win->WLayer);
+                                                    }
+                                                    gridRegion = TRUE;
+                                                    clipInstalled = TRUE;
+                                                }
                                             
                                     //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
                                             int height = 0;
-                                            BOOL draw = FALSE;
-                                                                                        
-                                            if (draw) {
+                                            
                                                 switch (shipSelected) {
                                                         case 1:
                                                             height = 3;
-                                                            
-                                                            bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
-                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
-                                                            
-                                                            if (inGrid(&ship1, bx, by, height) == FALSE) draw = FALSE;
                                                             
                                                             break;
                                                             
                                                         case 2:
                                                             height = 3;
                                                             
-                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
-                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
-                                                            
-                                                            if (inGrid(&ship2, bx, by, height) == FALSE) draw = FALSE;
-                                                            
                                                             break;
                                                             
                                                         case 3:
                                                             height = 2;
-                                                            
-                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
-                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
-                                                            
-                                                            if (inGrid(&ship3, bx, by, height) == FALSE) draw = FALSE;
                                                             
                                                             break;
                                                             
                                                         case 4:
                                                             height = 4;
                                                             
-                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
-                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
-                                                            
-                                                            if (inGrid(&ship4, bx, by, height) == FALSE) draw = FALSE;
-                                                            
                                                             break;
                                                             
                                                         case 5:
                                                             height = 5;
                                                             
-                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
-                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
-                                                            
-                                                            if (inGrid(&ship5, bx, by, height) == FALSE) draw = FALSE;
-                                                            
                                                             break;
                                                             
                                                     }
-                                            }
-                                            
-                                            
-                                            if (draw == FALSE) {
-                                               
-                                                
-                                                BltBitMapRastPort(gBitMap,
-                                                                pmx, pmy,
-                                                                rastport,
-                                                                pmx+win->BorderLeft, pmy+win->BorderTop,
-                                                                fillWidth+1, fillHeight+1,
-                                                                0xC0);
-                                                
-                                                
-                                                
-                                                break;
-                                            }
+                                        
                                             
                                             // bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
                                             // by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
                                             
-                                            printf("%d %d \n",bx, by);
+                                            //printf("%d %d \n",bx, by);
                                             
 
                                             if (prevExists) {
@@ -876,7 +853,7 @@ void startPrg()
                                                                 0xC0);
                                                     
                                             }
-                                    
+                                        }
                                             
                                             prevExists = TRUE;
                                             
@@ -884,7 +861,7 @@ void startPrg()
 
                                             switch (shipSelected) {
                                                 case 1:
-
+                                                    
                                                     fillWidth = 3*32;
                                                     fillHeight = 3*32;
 
@@ -982,13 +959,13 @@ void startPrg()
                                     
                                             }                                                     
 
-                                        }
+                                        
                                     break;
                                 }
-                                GT_ReplyIMsg((struct Message *)Message);
+                                
                                 
                             }
-                        } while(!Done);
+                        }
 
                         /* Poistetaan ClipRegion turvallisesti */
                         if (clipInstalled) {
