@@ -86,6 +86,9 @@ struct Library *LayersBase = NULL;
 
 struct Window *win = NULL;
 
+struct BitMap *gBitMap;
+Object *dto;
+
 int undoShip = 0;
 int undoBoard[16*16];
 int board[16*16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -117,7 +120,8 @@ struct Gadget    *glist, *gads[3];
 struct NewGadget ng;
 void             *vi;
 
-WORD borderTop;
+WORD static borderTop;
+WORD static borderLeft;
 
 struct EasyStruct myES =
     {
@@ -155,35 +159,39 @@ int plyHits = 0;
 struct BackFillInfo BF1, *Backfill;
 
 // these settings might ONLY work with VBCC compiler!
+
 void __saveds MyBackfillFunc(
         __reg("a0") struct Hook *Hook,
         __reg("a2") struct RastPort *rp,
-        __reg("a1") struct BackFillMessage *msg)
+        __reg("a1") struct BackFillMessage *bfa)
 
     {
-
         
         struct BackFillInfo *bfi = (struct BackFillInfo *)Hook->h_Data;
 
-        if (bfi->BitMap == NULL) return;
+        //if (bfi == NULL || gBitMap == NULL) return;
         
         int dx = (rp->Layer->Width  - bfi->BitMapHeader->bmh_Width)  / 2;
-        int dy = bfi->Screen->BarHeight + 1;
+        //int dy = bfi->Screen->BarHeight + 1;
 
 
-        BltBitMapRastPort(bfi->BitMap,
-                  0, 0,
-                  rp,
-                  dx, dy,
-                  800, 800,
-                  0xC0);
-
-    }
+        /* Piirrä vain rajatulle alueelle */
+    BltBitMapRastPort(
+        gBitMap,
+        0, 0,      /* lähde alku */
+        rp,
+        dx, borderTop,
+        800, 800,
+        0xC0       /* COPY */
+    );
+}
 
 void startPrg()
 {
         struct Region *clipRegion;
         struct Rectangle rect;
+        
+        struct Hook backfillHook;
         
         int width, height;
         struct RastPort *rastport;
@@ -196,8 +204,10 @@ void startPrg()
 
         struct Screen *scr = LockPubScreen("Workbench");
         glist = NULL;
-
+        
         LONG Depth;
+        
+        borderTop = scr->BarHeight+1;
         
         srand(time(NULL));
 
@@ -244,14 +254,13 @@ void startPrg()
             gads[NEWGAME_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
             if (gad != NULL) {
+
+                 /* Alusta backfill hook */
+                backfillHook.h_Entry = (HOOKFUNC)MyBackfillFunc;
+                backfillHook.h_SubEntry = NULL;
+                backfillHook.h_Data = NULL;
                 
-                Backfill = &BF1;
-			    memset(Backfill,0,sizeof(*Backfill));
-
-			    Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
-
-                Backfill->Hook.h_Data = Backfill;
-
+                
                 if (LoadPicture(Backfill, name, scr))
                 {
                     win = OpenWindowTags (NULL,
@@ -264,34 +273,45 @@ void startPrg()
                         WA_RMBTrap, TRUE,
                         WA_Gadgets, NULL,
                         WA_SmartRefresh, TRUE,
-                        WA_BackFill, &Backfill->Hook,
-                        WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
-                        WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | IDCMP_GADGETUP | IDCMP_REFRESHWINDOW,
+                        WA_CloseGadget, TRUE,
+                        WA_BackFill,(ULONG)&backfillHook,
+                        WA_Flags,       WFLG_ACTIVATE | WFLG_DRAGBAR,
+                        WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_REFRESHWINDOW | IDCMP_MOUSEMOVE | IDCMP_MOUSEBUTTONS | IDCMP_GADGETUP,
                         TAG_END);
 
                     if (win) {
-
-                        LoadPicture(Backfill, name, scr);
-                        
-                        /* Luo Region ja asenna Layeriin */
-                    /*    clipRegion = (struct Region *)NewRegion();
+    
+                        clipRegion = (struct Region *)NewRegion();
                         rect.MinX = win->BorderLeft; rect.MinY = win->BorderTop;
-                        rect.MaxX = win->BorderLeft+800; rect.MaxY = win->BorderTop+800;
+                        rect.MaxX = win->BorderLeft + 801; rect.MaxY = win->BorderTop + 801;
                         OrRectRegion(clipRegion, &rect);
-    
+                        
                         struct Region *old;
-
-                        // Lukitse juuri tämän ikkunan layer
-    
-                        LockLayer(0, win->WLayer);
-                        old = (struct Region *)InstallClipRegion(win->WLayer, clipRegion);
-                        if (old) DisposeRegion(old);
-
-                        UnlockLayer(win->WLayer);   
-                    */    
+   
+                        BOOL clipInstalled = FALSE;
+                        
+                        
+                        if (!clipInstalled) {
+                        
+                        WaitBlit();            
+                        if (win->WLayer && win->WScreen) {
+                  
+                            LockLayer(0, win->WLayer);
+                            {                        
+                                struct Region *old = (struct Region *)InstallClipRegion(win->WLayer, clipRegion);                     
+                                if (old && old != clipRegion) DisposeRegion(old);
+                            }
+                            UnlockLayer(win->WLayer);
+                            clipInstalled = TRUE;
+                            }
+                        }
+                        
+                        
+                        
+                        
                         rastport = win->RPort;
                         borderTop = win->BorderTop;
-                        //GT_RefreshWindow(win, NULL);
+                        GT_RefreshWindow(win, NULL);
 
                         if (!(myfont = (struct TextFont*)OpenDiskFont(&myta))) {
                             printf("Failed to open CGTimes 72 font\nWill use Topaz 12...\n");
@@ -315,12 +335,16 @@ void startPrg()
 
                         state = START_SCREEN;
                         
+                        
+                        WaitTOF();
+                        
                         /*
                         *  Main event loop
                         */
                         do
                         {
 
+                            
                             if (state == START_SCREEN) {
 
                                 SetAPen(rastport, 55);
@@ -337,7 +361,8 @@ void startPrg()
                                 Text(rastport, "Click anywhere in the window to continue", 40);
                                 
                             }
-
+                            
+                            
                             if (state != START_SCREEN) {
                                 drawGrid(rastport);
                                 drawShips(rastport);
@@ -376,7 +401,7 @@ void startPrg()
                                 state = GAME_OVER;
 
                                 // clear a bit the screen...
-                                                BltBitMapRastPort(Backfill->BitMap,
+                                                BltBitMapRastPort(gBitMap,
                                                     0,MARGIN+32*16+70,
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
@@ -408,11 +433,11 @@ void startPrg()
                                 
                                 MsgClass = Message->Class;
                                 MsgCode = Message->Code;
-
+                                
                                 switch(MsgClass)
                                 {
                                     case IDCMP_REFRESHWINDOW:
-
+    
                                         GT_RefreshWindow(win, NULL);
                                         break;
 
@@ -443,7 +468,7 @@ void startPrg()
                                                 placeComputersShips();
 
                                                 // clear "positioning of ships"
-                                                BltBitMapRastPort(Backfill->BitMap,
+                                                BltBitMapRastPort(gBitMap,
                                                     0,MARGIN+32*16+128,
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+32*16+128,
@@ -459,7 +484,7 @@ void startPrg()
 
                                             case NEWGAME_BUTTON:
 
-                                                BltBitMapRastPort(Backfill->BitMap,
+                                                BltBitMapRastPort(gBitMap,
                                                     0, 0,
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop,
@@ -483,7 +508,8 @@ void startPrg()
                                             Done = TRUE;
                                             break;
                                             
-                                    case IDCMP_MOUSEBUTTONS:
+                                    case IDCMP_MOUSEBUTTONS:         
+                                        
                                         // right mouse button to rotate ship
                                         if (MsgCode == 233) {
                                             
@@ -530,7 +556,7 @@ void startPrg()
                                             if (state == START_SCREEN) {
 
                                             
-                                                BltBitMapRastPort(Backfill->BitMap,
+                                                BltBitMapRastPort(gBitMap,
                                                 0, 0,
                                                 rastport,
                                                 win->BorderLeft, win->BorderTop,
@@ -543,6 +569,7 @@ void startPrg()
 
                                                 state = PLACE_SHIPS;
                                                 break;
+                                            
                                             }
                                             
                                             
@@ -567,7 +594,7 @@ void startPrg()
                                                     bx = (mx + MARGIN + win->BorderLeft + 32) / 32 - 1;
                                                     by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
                                                     
-                                                        BltBitMapRastPort(Backfill->BitMap,
+                                                        BltBitMapRastPort(gBitMap,
                                                             bpmx, bpmy,
                                                             rastport,
                                                             bpmx+win->BorderLeft, bpmy+win->BorderTop,
@@ -819,7 +846,7 @@ void startPrg()
                                             if (draw == FALSE) {
                                                
                                                 
-                                                BltBitMapRastPort(Backfill->BitMap,
+                                                BltBitMapRastPort(gBitMap,
                                                                 pmx, pmy,
                                                                 rastport,
                                                                 pmx+win->BorderLeft, pmy+win->BorderTop,
@@ -841,7 +868,7 @@ void startPrg()
                                                 
                                                 // if (by > 15) fillHeight = (by - 15) * 32;
                                                     
-                                                            BltBitMapRastPort(Backfill->BitMap,
+                                                            BltBitMapRastPort(gBitMap,
                                                                 pmx, pmy,
                                                                 rastport,
                                                                 pmx+win->BorderLeft, pmy+win->BorderTop,
@@ -959,12 +986,22 @@ void startPrg()
                                     break;
                                 }
                                 GT_ReplyIMsg((struct Message *)Message);
+                                
                             }
                         } while(!Done);
 
-                            //WaitTOF();
-                        //InstallClipRegion(win->WLayer, NULL);
-                        //DisposeRegion(clipRegion);
+                        /* Poistetaan ClipRegion turvallisesti */
+                        if (clipInstalled) {
+                            
+                                LockLayer(0, win->WLayer);
+                                {
+                                    struct Region *old = (struct Region *)InstallClipRegion(win->WLayer, NULL);
+                                    if (old) DisposeRegion(old);
+                                }
+                                UnlockLayer(win->WLayer);
+                            } else if (clipRegion) {
+                            DisposeRegion(clipRegion);
+                        }
                         
                         CloseWindow(win);
                     }
@@ -972,7 +1009,7 @@ void startPrg()
                     
                     
                     
-                    DisposeDTObject(Backfill->PictureObject);
+                    DisposeDTObject(dto);
                 }
                 
             }
@@ -991,77 +1028,16 @@ void startPrg()
 
  int main(int argc,char **argv)
     {
-
-        /* The program might need to ask for later versions of these libraries... */
-
-        if(IntuitionBase == NULL)
-        {
-            IntuitionBase = OpenLibrary("intuition.library",39);
-            if(IntuitionBase == NULL)
-                return -1;
-        }
-
-        if (DataTypesBase == NULL)
-        {
-            DataTypesBase = OpenLibrary("datatypes.library",39);
-            if(DataTypesBase == NULL) {
-                
-                if (IntuitionBase != NULL) CloseLibrary(IntuitionBase);
-
-                return -1;
-            }
-        }
-
-        if (UtilityBase == NULL)
-        {
-            UtilityBase = OpenLibrary("utility.library",39);
-            if(UtilityBase == NULL) {
-                
-                if (DataTypesBase != NULL) CloseLibrary(DataTypesBase);
-                if (IntuitionBase != NULL) CloseLibrary(IntuitionBase);
-
-                return -1;
-            }
-        }
-
-        if (GfxBase == NULL) {
-            GfxBase = OpenLibrary("graphics.library",39);
-            if(GfxBase == NULL) {
-
-                if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
-                if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
-                if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
-
-                return -1;
-            }
-
-        }
-
-        if (GadToolsBase == NULL) {
-            GadToolsBase = OpenLibrary("gadtools.library",39);
-            if (GadToolsBase == NULL) {
-
-                if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
-                if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
-                if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
-                if (GfxBase!=NULL) CloseLibrary(GfxBase);
-
-                return -1;
-            }
-        }
-
-        if (DiskfontBase == NULL) {
-            DiskfontBase = OpenLibrary("diskfont.library",39);
-            if (DiskfontBase == NULL) {
-
-                if (UtilityBase!= NULL) CloseLibrary(UtilityBase);
-                if (DataTypesBase!= NULL) CloseLibrary(DataTypesBase);
-                if (IntuitionBase!= NULL) CloseLibrary(IntuitionBase);
-                if (GfxBase!=NULL) CloseLibrary(GfxBase);
-                if (DiskfontBase!=NULL) CloseLibrary(DiskfontBase);
-
-                return -1;
-            }
+        DataTypesBase       = OpenLibrary("datatypes.library", 39);
+        IntuitionBase       = OpenLibrary("intuition.library", 39);
+        GfxBase             = OpenLibrary("graphics.library", 39);
+        UtilityBase         = OpenLibrary("utility.library", 39);
+        LayersBase          = OpenLibrary("layers.library", 39);
+        GadToolsBase        = OpenLibrary("gadtools.library", 39);
+        DiskfontBase        = OpenLibrary("diskfont.library", 39);
+        
+        if (!DataTypesBase || ! IntuitionBase || !GfxBase || !UtilityBase || !LayersBase || !GadToolsBase || !DiskfontBase) {
+            return -1;
         }
 
         startPrg();
@@ -1074,10 +1050,13 @@ void startPrg()
 
 int cleanup() {
 
-        if (DataTypesBase) CloseLibrary(DataTypesBase);
-        if (IntuitionBase) CloseLibrary(IntuitionBase);
-        if (UtilityBase) CloseLibrary(UtilityBase);
-        if (GfxBase) CloseLibrary(GfxBase);
+        CloseLibrary(DataTypesBase);
+        CloseLibrary(IntuitionBase);
+        CloseLibrary(UtilityBase);
+        CloseLibrary(GfxBase);
+        CloseLibrary(DiskfontBase);
+        CloseLibrary(GadToolsBase);
+        CloseLibrary(LayersBase);
         
         return;
 
@@ -1591,30 +1570,28 @@ int cleanup() {
     /* ---------------------------------------------------------------------- */
     BOOL LoadPicture(struct BackFillInfo *bfi, STRPTR filename, struct Screen *scr)
     {
-        bfi->PictureObject = NewDTObject(filename,
+        dto = NewDTObject(filename,
                                 DTA_SourceType       ,DTST_FILE,
                                                 DTA_GroupID          ,GID_PICTURE,
                                                 PDTA_Remap           ,FALSE,
-                                                // PDTA_DestBitMap      ,(ULONG)&bfi->BitMap,
+                                                //PDTA_DestBitMap      ,(ULONG)&gBitMap,
                                                 PDTA_DestMode        ,PMODE_V43,
                                                 TAG_DONE);
 
-        if (!bfi->PictureObject) return FALSE;
+        if (!dto) return FALSE;
 
-        DoMethod (bfi->PictureObject, DTM_PROCLAYOUT, NULL, TRUE);
+        DoMethod (dto, DTM_PROCLAYOUT, NULL, TRUE);
 
         struct BitMapHeader *bmhd;
-        struct BitMap *bm;
 
-        GetDTAttrs (bfi->PictureObject,
+        GetDTAttrs (dto,
                     PDTA_BitMapHeader, &bmhd,
-                    PDTA_BitMap, &bm,
+                    PDTA_BitMap, &gBitMap,
                     TAG_END);
         
-        if (!bmhd || !bm) return FALSE;
-
+        if (!bmhd || !gBitMap) return FALSE;
+        
         bfi->Screen = scr;
-        bfi->BitMap = bm;
         bfi->BitMapHeader = bmhd;
         bfi->CopyWidth  = bmhd->bmh_Width;
         bfi->CopyHeight = bmhd->bmh_Height;
