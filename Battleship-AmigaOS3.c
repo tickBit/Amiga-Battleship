@@ -34,7 +34,12 @@
 #include <exec/io.h>
 
 #include <datatypes/pictureclass.h>
-
+#include <exec/types.h>
+#include <intuition/intuition.h>
+#include <graphics/gfx.h>
+#include <graphics/rastport.h>
+#include <graphics/regions.h>   // <-- tämä on oleellinen
+#include <graphics/layers.h>
 #include <intuition/intuition.h>
 #include <intuition/icclass.h>
 #include <intuition/gadgetclass.h>
@@ -124,23 +129,23 @@ struct EasyStruct myES =
     };
 
 struct BackFillInfo
-    {
-        struct Hook            Hook;
-        struct Screen         *Screen;
-        Object                *PictureObject;
-        struct BitMapHeader   *BitMapHeader;
-        struct BitMap         *BitMap;
-        WORD                   CopyWidth;
-        WORD                   CopyHeight;
-    };
+{
+	struct Hook            Hook;
+	struct Screen         *Screen;
+	Object                *PictureObject;
+	struct BitMapHeader   *BitMapHeader;
+	struct BitMap         *BitMap;
+	WORD                   CopyWidth;
+	WORD                   CopyHeight;
+};
 
 struct BackFillMsg
-    {
-        struct Layer    *Layer;
-        struct Rectangle Bounds;
-        LONG             OffsetX;
-        LONG             OffsetY;
-    };
+{
+	struct Layer    *Layer;
+	struct Rectangle Bounds;
+	LONG             OffsetX;
+	LONG             OffsetY;
+};
 
 BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 
@@ -160,22 +165,26 @@ void __saveds MyBackfillFunc(
         
         struct BackFillInfo *bfi = (struct BackFillInfo *)Hook->h_Data;
 
-        if (bfi == NULL || bfi->BitMap == NULL) return;
+        if (bfi->BitMap == NULL) return;
         
-        int layerW = rp->Layer->ClipRect->bounds.MaxX - rp->Layer->ClipRect->bounds.MinX + 1;
-        int dx = (layerW - bfi->BitMapHeader->bmh_Width)  / 2;
+        int dx = (rp->Layer->Width  - bfi->BitMapHeader->bmh_Width)  / 2;
         int dy = bfi->Screen->BarHeight + 1;
 
+
         BltBitMapRastPort(bfi->BitMap,
-                    0, 0,
-                    rp,
-                    dx, dy,
-                    800, 800,
-                    0xC0, -1, NULL);
+                  0, 0,
+                  rp,
+                  dx, dy,
+                  800, 800,
+                  0xC0);
+
     }
 
 void startPrg()
 {
+        struct Region *clipRegion;
+        struct Rectangle rect;
+        
         int width, height;
         struct RastPort *rastport;
         struct TextFont *font;
@@ -235,11 +244,11 @@ void startPrg()
             gads[NEWGAME_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
             if (gad != NULL) {
-
+                
                 Backfill = &BF1;
-                memset(Backfill,0,sizeof(*Backfill));
+			    memset(Backfill,0,sizeof(*Backfill));
 
-                Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
+			    Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
 
                 Backfill->Hook.h_Data = Backfill;
 
@@ -255,17 +264,33 @@ void startPrg()
                         WA_RMBTrap, TRUE,
                         WA_Gadgets, NULL,
                         WA_SmartRefresh, TRUE,
+                        WA_BackFill, &Backfill->Hook,
                         WA_Flags, WFLG_CLOSEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_ACTIVATE,
                         WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEBUTTONS | IDCMP_MOUSEMOVE | IDCMP_GADGETUP | IDCMP_REFRESHWINDOW,
-                        WA_BackFill, &Backfill->Hook,
                         TAG_END);
 
                     if (win) {
 
+                        LoadPicture(Backfill, name, scr);
+                        
+                        /* Luo Region ja asenna Layeriin */
+                    /*    clipRegion = (struct Region *)NewRegion();
+                        rect.MinX = win->BorderLeft; rect.MinY = win->BorderTop;
+                        rect.MaxX = win->BorderLeft+800; rect.MaxY = win->BorderTop+800;
+                        OrRectRegion(clipRegion, &rect);
+    
+                        struct Region *old;
+
+                        // Lukitse juuri tämän ikkunan layer
+    
+                        LockLayer(0, win->WLayer);
+                        old = (struct Region *)InstallClipRegion(win->WLayer, clipRegion);
+                        if (old) DisposeRegion(old);
+
+                        UnlockLayer(win->WLayer);   
+                    */    
                         rastport = win->RPort;
                         borderTop = win->BorderTop;
-                        
-                        
                         //GT_RefreshWindow(win, NULL);
 
                         if (!(myfont = (struct TextFont*)OpenDiskFont(&myta))) {
@@ -539,7 +564,7 @@ void startPrg()
                                                             height = 5;
                                                     }
                                                     
-                                                    bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
+                                                    bx = (mx + MARGIN + win->BorderLeft + 32) / 32 - 1;
                                                     by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
                                                     
                                                         BltBitMapRastPort(Backfill->BitMap,
@@ -719,7 +744,7 @@ void startPrg()
                                             break;
                                         }
                                     case IDCMP_MOUSEMOVE:
-
+                                         
                                         if (prevExists) {
                                             pmx = mx;
                                             pmy = my;
@@ -730,30 +755,91 @@ void startPrg()
                                         my = Message->MouseY;          
                                         
                                         if (shipSelected != 0 && state == PLACE_SHIPS) {
-
+                                            
                                     //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
                                             int height = 0;
-                                                    
-                                            switch (shipSelected) {
+                                            BOOL draw = FALSE;
+                                                                                        
+                                            if (draw) {
+                                                switch (shipSelected) {
                                                         case 1:
                                                             height = 3;
+                                                            
+                                                            bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
+                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                            
+                                                            if (inGrid(&ship1, bx, by, height) == FALSE) draw = FALSE;
+                                                            
+                                                            break;
+                                                            
                                                         case 2:
                                                             height = 3;
+                                                            
+                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
+                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                            
+                                                            if (inGrid(&ship2, bx, by, height) == FALSE) draw = FALSE;
+                                                            
+                                                            break;
+                                                            
                                                         case 3:
                                                             height = 2;
+                                                            
+                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
+                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                            
+                                                            if (inGrid(&ship3, bx, by, height) == FALSE) draw = FALSE;
+                                                            
+                                                            break;
+                                                            
                                                         case 4:
                                                             height = 4;
+                                                            
+                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
+                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                            
+                                                            if (inGrid(&ship4, bx, by, height) == FALSE) draw = FALSE;
+                                                            
+                                                            break;
+                                                            
                                                         case 5:
                                                             height = 5;
+                                                            
+                                                            bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
+                                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                            
+                                                            if (inGrid(&ship5, bx, by, height) == FALSE) draw = FALSE;
+                                                            
+                                                            break;
+                                                            
                                                     }
-                                                    
-                                            bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
-                                            by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                            }
                                             
-                                            printf("%d\n",by);
+                                            
+                                            if (draw == FALSE) {
+                                               
+                                                
+                                                BltBitMapRastPort(Backfill->BitMap,
+                                                                pmx, pmy,
+                                                                rastport,
+                                                                pmx+win->BorderLeft, pmy+win->BorderTop,
+                                                                fillWidth+1, fillHeight+1,
+                                                                0xC0);
+                                                
+                                                
+                                                
+                                                break;
+                                            }
+                                            
+                                            // bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 1;
+                                            // by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                            
+                                            printf("%d %d \n",bx, by);
                                             
 
                                             if (prevExists) {
+                                                
+                                                // if (by > 15) fillHeight = (by - 15) * 32;
                                                     
                                                             BltBitMapRastPort(Backfill->BitMap,
                                                                 pmx, pmy,
@@ -780,11 +866,11 @@ void startPrg()
 
                                                             if (ship1[i+j*3] == 1) {
 
-                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                                //if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                //    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
 
                                                                     RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
-                                                                }
+                                                                //}
                                                             }
                                                         } 
                                                     }
@@ -799,11 +885,11 @@ void startPrg()
                                                         for (int i = 0; i < 3; i++) {
                                                             if (ship2[i+j*3] == 1) {
 
-                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                                //if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                //    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
 
                                                                     RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
-                                                                }
+                                                                //}
                                                             }
                                                         } 
                                                     }
@@ -818,11 +904,11 @@ void startPrg()
                                                         for (int i = 0; i < 2; i++) {
                                                             if (ship3[i+j*2] == 1) {
 
-                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                                //if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                //    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
 
                                                                     RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
-                                                                }
+                                                                //}
                                                             }
                                                         } 
                                                     }
@@ -837,11 +923,11 @@ void startPrg()
                                                         for (int i = 0; i < 4; i++) {
                                                             if (ship4[i+j*4] == 1) {
 
-                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                                //if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                //    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
 
                                                                     RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
-                                                                }
+                                                                //}
                                                             }
                                                         } 
                                                     }
@@ -856,11 +942,11 @@ void startPrg()
                                                         for (int i = 0; i < 5; i++) {
                                                             if (ship5[i+j*5] == 1) {
 
-                                                                if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
-                                                                    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
+                                                                //if (!(mx + i * 32 >= MARGIN + 16 * 32 - win->BorderRight || mx + i * 32 <= win->BorderLeft
+                                                                //    || my + j * 32 <= win->BorderTop + MARGIN || my + j*32 >= MARGIN + 16 * 32 + win->BorderTop)) {
 
                                                                     RectFill(rastport, mx + win->BorderLeft + i*32, my + win->BorderTop + j*32, mx + win->BorderLeft + i*32+32, my + win->BorderTop + j*32+32);
-                                                                }
+                                                                //}
                                                             }
                                                         } 
                                                     }
@@ -877,6 +963,9 @@ void startPrg()
                         } while(!Done);
 
                             //WaitTOF();
+                        //InstallClipRegion(win->WLayer, NULL);
+                        //DisposeRegion(clipRegion);
+                        
                         CloseWindow(win);
                     }
                         
@@ -1112,6 +1201,18 @@ int cleanup() {
         
     }
 
+    BOOL inGrid(int *ship, int x, int y, int length) {
+
+        for (int j = 0; j < length; j++) {
+            for (int i = 0; i < length; i++) {
+                if (ship[i+j*length] == 1)
+                    if (x+i < 1 || x+i > 15 || y+j > 15 || y+j < 1) return FALSE;
+            }
+        }
+
+        return TRUE;
+    }
+    
     void printBoard() {
         for (int j = 0; j < 16; j++) {
             for (int i = 0; i < 16; i++) {
@@ -1493,8 +1594,8 @@ int cleanup() {
         bfi->PictureObject = NewDTObject(filename,
                                 DTA_SourceType       ,DTST_FILE,
                                                 DTA_GroupID          ,GID_PICTURE,
-                                                PDTA_Remap           ,TRUE,
-                                                PDTA_DestBitMap      ,(ULONG)&bfi->BitMap,
+                                                PDTA_Remap           ,FALSE,
+                                                // PDTA_DestBitMap      ,(ULONG)&bfi->BitMap,
                                                 PDTA_DestMode        ,PMODE_V43,
                                                 TAG_DONE);
 
