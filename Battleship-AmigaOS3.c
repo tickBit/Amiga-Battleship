@@ -190,6 +190,7 @@ void __saveds MyBackfillFunc(
 void startPrg()
 {
         struct Region *clipRegion;
+        struct Region *old, *newRegion;
         struct Rectangle rect;
         
         struct Hook backfillHook;
@@ -285,16 +286,7 @@ void startPrg()
                     if (win) {
     
                         BOOL gridRegion = FALSE;
-                        
-                        //clipRegion = (struct Region *)NewRegion();
-                        //rect.MinX = win->BorderLeft; rect.MinY = win->BorderTop;
-                        //rect.MaxX = win->BorderLeft + 801; rect.MaxY = win->BorderTop + 801;
-                        //OrRectRegion(clipRegion, &rect);
-                        
-                        struct Region *old;
-                                                
-                        
-                        
+                
                         rastport = win->RPort;
                         borderTop = win->BorderTop;
                         GT_RefreshWindow(win, NULL);
@@ -381,17 +373,61 @@ void startPrg()
                                 SetAPen(rastport, 66);
                                 Move(rastport, 32+68, MARGIN + 32*16+180+16+32);
                                 Text(rastport, "Human player has missed AI's ship", 33);
+                                
+                                // as long as these settings are in order, in-game texts can't be printed
+                                            if (gridRegion == FALSE) {
+                                                    rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
+                                                    rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
+                                                    
+                                                    
+                                                    WaitBlit();
+                                                    
+                                                    if ((newRegion = (struct Region *) NewRegion())) {
+                                                        OrRectRegion(newRegion, &rect);
+
+                                                        LockLayer(0, win->WLayer);
+                                                        old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
+                                                        UnlockLayer(win->WLayer);
+
+                                                        if (old) DisposeRegion(old);
+
+                                                        clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                    }     
+                                                    
+                                                    gridRegion = TRUE;
+                                                    clipInstalled = TRUE;
+                                                }
+                                            
                             }
                             
                             if ((AIHits == 23 || plyHits == 23) && state != GAME_OVER) {
                                 state = GAME_OVER;
+                                
+                                rect.MinX = win->BorderLeft + 1;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 126;
+                                                rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN + 250;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 250;
+                                                
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
 
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+
+                                                    if (old) DisposeRegion(old);
+
+                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                }
+                                                
+                                                gridRegion = FALSE;
+                                                
                                 // clear a bit the screen...
                                                 BltBitMapRastPort(gBitMap,
                                                     0,MARGIN+32*16+70,
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
-                                                    600, 180,
+                                                    780, 180,
                                                 0xC0);
                             }
 
@@ -470,6 +506,33 @@ void startPrg()
                                                     0xC0);
                                                 
                                                 state = PLAY;
+                                                
+                                                rect.MinX = win->BorderLeft + 1;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 512;
+                                                rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 250;
+                                                
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
+
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+
+                                                    if (old) DisposeRegion(old);
+
+                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                }
+                                                
+                                                gridRegion = FALSE;
+                                                
+                                                BltBitMapRastPort(gBitMap,
+                                                    0,MARGIN+32*16+70,
+                                                    rastport,
+                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
+                                                    600, 120,
+                                                    0xC0);
+                                                                                                
                                                 break;
                                             case UNDO_BUTTON:
                                                 if (state != PLACE_SHIPS) break;
@@ -479,12 +542,12 @@ void startPrg()
                                             case NEWGAME_BUTTON:
 
                                                 BltBitMapRastPort(gBitMap,
-                                                    0, 0,
+                                                    MARGIN, MARGIN,
                                                     rastport,
-                                                    win->BorderLeft, win->BorderTop,
-                                                    800, 800,
+                                                    win->BorderLeft+MARGIN, win->BorderTop+MARGIN,
+                                                    512, 512,
                                                     0xC0);
-                                                RefreshGList(win->FirstGadget, win, NULL, -1);
+                                                
                                                 initGame();
 
                                                 state = PLACE_SHIPS;
@@ -503,6 +566,10 @@ void startPrg()
                                             break;
                                             
                                     case IDCMP_MOUSEBUTTONS:         
+                                        
+                                        printf();
+                                        printBoard();
+                                        printf();
                                         
                                         // right mouse button to rotate ship
                                         if (code == 233) {
@@ -588,8 +655,8 @@ void startPrg()
                                                             height = 5;
                                                     }
                                                     
-                                                    bx = (mx + MARGIN + win->BorderLeft + 32) / 32 - 1;
-                                                    by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                                    bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
+                                                    by = (my + MARGIN + win->BorderTop) / 32 - 2;
                                                     
                                                         BltBitMapRastPort(gBitMap,
                                                             bpmx, bpmy,
@@ -737,12 +804,15 @@ void startPrg()
                                                         break;
                                                 
                                                 }
-                                                
                                             
-                                                if (state == PLAY) {
-                                                    bx = (mx + MARGIN + win->BorderLeft + 15) / 32 - 2;
-                                                    by = (my + MARGIN + win->BorderTop + height) / 32 - 2;
+                                            }
+                                            
+                                            if (state == PLAY) {
+                                                bx = (mx + MARGIN + win->BorderLeft) / 32 - 2;
+                                                    by = (my + MARGIN + win->BorderTop) / 32 - 4;
 
+                                                    printf("bx=%d :: by=%d\n", bx, by);
+                                                    
                                                     if (bx >= 0 && bx < 16 & by >= 0 && by < 16) {
                                                         
                                                         if (board[bx + by * 16] == 0) {
@@ -762,48 +832,37 @@ void startPrg()
                                                         AImove();
 
                                                     }
-                                                }
-                                            
                                             }
                                             break;
                                         }
                                     case IDCMP_MOUSEMOVE:
-                                         /*
-                                        if (prevExists) {
-                                            pmx = mx;
-                                            pmy = my;
-                                        }
-
-                                        // origo of coordinates at window frame's (0,0) 
-                                        mx = Message->MouseX;
-                                        my = Message->MouseY;          
-                                        */
+                                         
                                         if (shipSelected != 0 && state == PLACE_SHIPS) {
                                             
                                             // as long as these settings are in order, in-game texts can't be printed
                                             if (gridRegion == FALSE) {
-                                                    clipRegion = (struct Region *)NewRegion();
                                                     rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
-                                                    rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;
-                                                    OrRectRegion(clipRegion, &rect);
-                            
-                                                    struct Region *old;
+                                                    rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
                                                     
-                                                    WaitBlit();            
-                                                    if (win->WLayer && win->WScreen) {
-                    
+                                                    
+                                                    WaitBlit();
+                                                    
+                                                    if ((newRegion = (struct Region *) NewRegion())) {
+                                                        OrRectRegion(newRegion, &rect);
+
                                                         LockLayer(0, win->WLayer);
-                                                        {                        
-                                                            struct Region *old = (struct Region *)InstallClipRegion(win->WLayer, clipRegion);                     
-                                                            if (old && old != clipRegion) DisposeRegion(old);
-                                                        }
+                                                        old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                         UnlockLayer(win->WLayer);
-                                                    }
+
+                                                        if (old) DisposeRegion(old);
+
+                                                        clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                    }     
+                                                    
                                                     gridRegion = TRUE;
                                                     clipInstalled = TRUE;
                                                 }
                                             
-                                    //RefreshGList(win->FirstGadget, win, NULL, -1);  // Refresh gadgets
                                             int height = 0;
                                             
                                                 switch (shipSelected) {
@@ -1040,8 +1099,6 @@ int cleanup() {
     }
 
     void drawBoard(struct RastPort *rp) {
-
-        //printBoard();
         
         for (int j = 0; j < 16; j++) {
             for (int i = 0; i < 16; i++) {
@@ -1049,39 +1106,39 @@ int cleanup() {
                 // player's ship
                 if (board[i + j * 16] == 1) {
                     SetAPen(rp, 101);
-                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32 + win->BorderTop, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1 + win->BorderTop);
+                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // computer's ship
                 if (state == GAME_OVER && AIHits == 23) {
                     if (board[i + j * 16] == 2) {
                         SetAPen(rp, 98);
-                        RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                        RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                     }
                 }
 
                 // player's miss
                 if (board[i + j * 16] == 3) {
                     SetAPen(rp, 83);
-                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // player's hit
                 if (board[i + j * 16] == 4) {
                     SetAPen(rp, 84);
-                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // computer's miss
                 if (board[i + j * 16] == 5) {
                     SetAPen(rp, 88);
-                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // computer's hit
                 if (board[i + j * 16] == 6) {
                     SetAPen(rp, 74);
-                    RectFill(rp, MARGIN + i * 32, MARGIN + j * 32, MARGIN + i * 32 + 32-1, MARGIN + j * 32 + 32-1);
+                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 
@@ -1155,18 +1212,6 @@ int cleanup() {
             Draw(rp, i, MARGIN+512+borderTop);
         }
         
-    }
-
-    BOOL inGrid(int *ship, int x, int y, int length) {
-
-        for (int j = 0; j < length; j++) {
-            for (int i = 0; i < length; i++) {
-                if (ship[i+j*length] == 1)
-                    if (x+i < 1 || x+i > 15 || y+j > 15 || y+j < 1) return FALSE;
-            }
-        }
-
-        return TRUE;
     }
     
     void printBoard() {
