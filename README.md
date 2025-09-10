@@ -11,8 +11,17 @@ In the LhA archive there are Amiga executable and info (icon) file for the execu
 
 Sorry for the typo in the "First commit"...
 
+Please notice, that your Amiga system should have big enough resolution: The inner size of the game window is 800x800 pixels.
+
 ## Picture
+
+Picture of the game running on AmiKit:
+
+![Battleship-AmiKit](https://github.com/user-attachments/assets/a24e5642-8173-49a6-b762-2a37f5888b8a)
+
+
+Old picture:
 
 ![battleship](https://github.com/user-attachments/assets/dda534e7-5f5f-4d0e-9887-93ce49e793a5)
 
-Please notice, that your Amiga system should have big enough resolution: The inner size of the game window is 800x800 pixels.
+
