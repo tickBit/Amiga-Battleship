@@ -573,6 +573,33 @@ void startPrg()
                                                 break;
                                             case UNDO_BUTTON:
                                                 if (state != PLACE_SHIPS) break;
+                                                
+                                                // playing area
+                                                rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
+                                                rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
+                                                    
+                                                    
+                                                WaitBlit();
+                                                    
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
+
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+
+                                                    if (old) DisposeRegion(old);
+
+                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                }     
+                                                
+                                                BltBitMapRastPort(gBitMap,
+                                                    0,0,
+                                                    rastport,
+                                                    win->BorderLeft, win->BorderTop,
+                                                    700+MARGIN+40, 512+MARGIN,
+                                                0xC0);
+                                                
                                                 undoCurrentPositioning();
                                                 break;
 
