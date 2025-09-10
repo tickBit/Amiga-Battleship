@@ -13,6 +13,12 @@ Sorry for the typo in the "First commit"...
 
 Please notice, that your Amiga system should have big enough resolution: The inner size of the game window is 800x800 pixels.
 
+## The colors differ in different Amiga systems
+
+On AmiKit the colors are as I meant them. I'm running AmiKit with AmigaOS 3.2.3 at the moment.
+
+On Windows with Amiga Forever on AmigaOS 3.2.3 the colors of the ships to placed differ from what I have meant. Also, on Linux with Amiberry on AmigaOS 3.2.3 some of the colors are yet different and so are with Amiberry on AmigaOS 3.1. At the moment the real game experience can probably only be achieved on AmiKit.
+
 ## Picture
 
 Picture of the game running on AmiKit:
