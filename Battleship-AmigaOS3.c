@@ -401,12 +401,15 @@ void startPrg()
                             }
                             
                             if ((AIHits == 23 || plyHits == 23) && state != GAME_OVER) {
-                                state = GAME_OVER;
                                 
-                                rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 126;
-                                                rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN + 250;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 250;
+                                state = GAME_OVER;
+                                                                                                
+                                                rect.MinX = win->BorderLeft + 1;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 56;
+                                                rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 120;
+                                                
+                                                WaitBlit();
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -420,15 +423,49 @@ void startPrg()
                                                     clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }
                                                 
-                                                gridRegion = FALSE;
                                                 
-                                // clear a bit the screen...
+                                                
+                                                // clear "Game on!" text
                                                 BltBitMapRastPort(gBitMap,
                                                     0,MARGIN+32*16+70,
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
                                                     780, 180,
                                                 0xC0);
+                                
+                                
+                                                rect.MinX = win->BorderLeft + 1;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 126;
+                                                rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN + 250;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 250;
+                                                
+                                                WaitBlit();
+                                                
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
+
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+
+                                                    if (old) DisposeRegion(old);
+
+                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                }
+                                                
+                                                // clear the screen a bit...
+                                                BltBitMapRastPort(gBitMap,
+                                                    0,MARGIN+32*16+126 + 1,
+                                                    rastport,
+                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+126 + 1,
+                                                    780, 180,
+                                                0xC0);
+                                                
+                                                
+                                                // when the following is FALSE, eventually the Clip Region will change..
+                                                gridRegion = FALSE;
+                                                
+                                                
                             }
 
                             if (state == GAME_OVER) {
@@ -540,13 +577,91 @@ void startPrg()
                                                 break;
 
                                             case NEWGAME_BUTTON:
+                                                
+                                                rect.MinX = win->BorderLeft + 1;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 56;
+                                                rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 120;
+                                                
+                                                WaitBlit();
+                                                
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
 
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+
+                                                    if (old) DisposeRegion(old);
+
+                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                }
+                                                
+                                                // clear "Game on!" text
                                                 BltBitMapRastPort(gBitMap,
-                                                    MARGIN, MARGIN,
+                                                    0,MARGIN+32*16+70,
                                                     rastport,
-                                                    win->BorderLeft+MARGIN, win->BorderTop+MARGIN,
-                                                    512, 512,
-                                                    0xC0);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
+                                                    600, 180,
+                                                0xC0);
+                                                
+                                                
+                                                // clear "game over" text
+                                                rect.MinX = win->BorderLeft + 1;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 126;
+                                                rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN + 250;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 250;
+                                                
+                                                WaitBlit();
+                                                
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
+
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+
+                                                    if (old) DisposeRegion(old);
+
+                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                }
+                                                
+                                                // clear the screen a bit...
+                                                BltBitMapRastPort(gBitMap,
+                                                    0,MARGIN+32*16+126 + 1,
+                                                    rastport,
+                                                    win->BorderLeft, win->BorderTop + MARGIN+32*16+126 + 1,
+                                                    780, 180,
+                                                0xC0);
+                                                
+                                                
+                                                // playing area
+                                                rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
+                                                rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
+                                                    
+                                                    
+                                                WaitBlit();
+                                                    
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
+
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+
+                                                    if (old) DisposeRegion(old);
+
+                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
+                                                }     
+                                                
+                                                BltBitMapRastPort(gBitMap,
+                                                    0,0,
+                                                    rastport,
+                                                    win->BorderLeft, win->BorderTop,
+                                                    700+MARGIN+40, 512+MARGIN,
+                                                0xC0);
+                                                
+                                                gridRegion = TRUE;
                                                 
                                                 initGame();
 
@@ -807,7 +922,7 @@ void startPrg()
                                                 bx = (mx + MARGIN + win->BorderLeft) / 32 - 2;
                                                     by = (my + MARGIN + win->BorderTop) / 32 - 4;
 
-                                                    printf("bx=%d :: by=%d\n", bx, by);
+                                                    //printf("bx=%d :: by=%d\n", bx, by);
                                                     
                                                     if (bx >= 0 && bx < 16 & by >= 0 && by < 16) {
                                                         
