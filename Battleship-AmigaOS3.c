@@ -15,12 +15,11 @@
 
         You can adjust the difficulty of the game by increasing or decreasing
         constant DIFFICULTY (and variable error).
-
-        TODO:
-        - check EasyRequest
-        - Clear BltBitMapRastPort
-        - limit vertically to clearing area at the bottom
-        - in-game coordinates..
+        
+        I taught myself new things while programming this.
+        In my youth I thought I would never use layers.library.
+        Now I have.
+        
 */
 
 #include <stdio.h>
