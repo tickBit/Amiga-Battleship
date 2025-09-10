@@ -1732,7 +1732,7 @@ int cleanup() {
         dto = NewDTObject(filename,
                                 DTA_SourceType       ,DTST_FILE,
                                                 DTA_GroupID          ,GID_PICTURE,
-                                                PDTA_Remap           ,FALSE,
+                                                PDTA_Remap           ,TRUE,
                                                 //PDTA_DestBitMap      ,(ULONG)&gBitMap,
                                                 PDTA_DestMode        ,PMODE_V43,
                                                 TAG_DONE);
