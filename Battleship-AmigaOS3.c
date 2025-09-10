@@ -607,7 +607,7 @@ void startPrg()
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 56;
                                                 rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 120;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 190;
                                                 
                                                 WaitBlit();
                                                 
@@ -628,7 +628,7 @@ void startPrg()
                                                     0,MARGIN+32*16+70,
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
-                                                    600, 180,
+                                                    600, 190,
                                                 0xC0);
                                                 
                                                 
