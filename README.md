@@ -1,8 +1,8 @@
 # Battleship game for AmigaOS 3
 
-Classic battle ship game with simple AI for AmigaOS 3.x. The latest update works at least on my Amiberry with AmigaOS 3.x, but it doesn't seem to work well with WinUAE based emulation.. Trying to fix it soon...
+Classic battle ship game with simple AI for AmigaOS 3.x. This is fixed version. I hope this works.
 
-To position a ship, first click once on the ship, then simply move mouse to the grid and when a position to place a ship is found, click there.
+To position a ship, first click once on a ship, then simply move mouse to the grid and when a position to place a ship is found, click there.
 
 The game uses 1999 standard of C, so when compiling with VBCC, switch -c99 must be used.
 More info in the source code. The source can be ONLY compiled with VBCC due to the usage of backfill hook.
