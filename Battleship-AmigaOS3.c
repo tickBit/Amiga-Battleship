@@ -212,8 +212,6 @@ void startPrg()
         struct Region *old, *newRegion;
         struct Rectangle rect;
         
-        struct Hook backfillHook;
-        
         BOOL clipInstalled = FALSE;
         
         int width, height;
@@ -327,9 +325,9 @@ void startPrg()
                 memset(Backfill, 0, sizeof(struct BackFillInfo));
             
                  /* Alusta backfill hook */
-                backfillHook.h_Entry = (HOOKFUNC)MyBackfillFunc;
-                backfillHook.h_SubEntry = NULL;
-                backfillHook.h_Data = Backfill;
+                Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
+                Backfill->Hook.h_SubEntry = NULL;
+                Backfill->Hook.h_Data = Backfill;
                 
                 
                 if (LoadPicture(Backfill, name, scr))
@@ -345,7 +343,7 @@ void startPrg()
                         WA_Gadgets, NULL,
                         WA_SmartRefresh, TRUE,
                         WA_CloseGadget, TRUE,
-                        WA_BackFill,(ULONG)&backfillHook,
+                        WA_BackFill,(ULONG)&Backfill->Hook,
                         WA_Flags,       WFLG_ACTIVATE | WFLG_DRAGBAR,
                         WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEMOVE | IDCMP_MOUSEBUTTONS | IDCMP_GADGETUP,
                         TAG_END);
