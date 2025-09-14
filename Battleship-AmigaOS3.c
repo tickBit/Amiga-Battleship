@@ -440,11 +440,14 @@ void startPrg()
                                 
                                 // as long as these settings are in order, in-game texts can't be printed
                                             if (gridRegion == FALSE) {
+                                                    
+                                                    WaitBlit();
+                                                    
                                                     rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
                                                     rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
                                                     
                                                     
-                                                    WaitBlit();
+                                                    
                                                     
                                                     if ((newRegion = (struct Region *) NewRegion())) {
                                                         OrRectRegion(newRegion, &rect);
@@ -467,13 +470,14 @@ void startPrg()
                             if ((AIHits == 23 || plyHits == 23) && state != GAME_OVER) {
                                 
                                 state = GAME_OVER;
+                                                WaitBlit();
                                                                                                 
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 56;
                                                 rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
                                                 rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 140;
                                                 
-                                                WaitBlit();
+                                                
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -497,13 +501,12 @@ void startPrg()
                                                     780, 180,
                                                 0xC0);
                                 
-                                
+                                                WaitBlit();
+                                                
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 126;
                                                 rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN + 250;
                                                 rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 250;
-                                                
-                                                WaitBlit();
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -607,6 +610,8 @@ void startPrg()
                                                 
                                                 state = PLAY;
                                                 
+                                                WaitBlit();
+                                                
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 512;
                                                 rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
@@ -637,12 +642,10 @@ void startPrg()
                                             case UNDO_BUTTON:
                                                 if (state != PLACE_SHIPS) break;
                                                 
+                                                WaitBlit();
                                                 // playing area
                                                 rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
                                                 rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
-                                                    
-                                                    
-                                                WaitBlit();
                                                     
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -668,12 +671,12 @@ void startPrg()
 
                                             case NEWGAME_BUTTON:
                                                 
+                                                WaitBlit();
+                                                
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 56;
                                                 rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
                                                 rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 190;
-                                                
-                                                WaitBlit();
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -697,12 +700,12 @@ void startPrg()
 
                                                 
                                                 // clear "game over" text
+                                                WaitBlit();
+                                                
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 126;
                                                 rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN + 250;
                                                 rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 250;
-                                                
-                                                WaitBlit();
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -730,11 +733,9 @@ void startPrg()
                                                 Text(rastport, "Positioning of ships", 20);
                                                 
                                                 // playing area
+                                                WaitBlit();
                                                 rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
                                                 rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
-                                                    
-                                                    
-                                                WaitBlit();
                                                     
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -1046,11 +1047,10 @@ void startPrg()
                                             
                                             // as long as these settings are in order, in-game texts can't be printed
                                             if (gridRegion == FALSE) {
+                                                    WaitBlit();
+                                                    
                                                     rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
                                                     rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 512 + 1;                            
-                                                    
-                                                    
-                                                    WaitBlit();
                                                     
                                                     if ((newRegion = (struct Region *) NewRegion())) {
                                                         OrRectRegion(newRegion, &rect);
@@ -1230,7 +1230,9 @@ void startPrg()
                                 
                             }
                         }
-
+                        
+                        WaitBlit();
+                        
                         /* Poistetaan ClipRegion turvallisesti */
                         if (clipInstalled) {
                             
