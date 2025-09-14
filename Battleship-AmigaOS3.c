@@ -112,6 +112,16 @@ int angle_ = 0;
 int error = 6;
 float errorDelay = 0.0f;
 
+ULONG penPink;          // (237,119,255)
+ULONG penLightPink;     // (254,204,253)
+ULONG penBlue;          // (52,100,208)
+ULONG penLightBlue;     // (102,203,255)
+ULONG penWhite;         // (237,255,255)
+ULONG penPinkHit;       // (204,136,255)
+ULONG penLightPinkTxt;  // (254,240,255)
+ULONG penLightBlueTxt;  // (99,206,255)
+
+
 struct TextAttr Topaz120 = { "topaz.font", 12, 0, 0, };
 struct TextAttr myta = {"CGTimes.font", 72, 0, 0};
 struct TextFont *myfont, *myfont2;
@@ -630,7 +640,7 @@ void startPrg()
                                                     win->BorderLeft, win->BorderTop + MARGIN+32*16+70,
                                                     600, 190,
                                                 0xC0);
-                                                
+
                                                 
                                                 // clear "game over" text
                                                 rect.MinX = win->BorderLeft + 1;
@@ -660,6 +670,10 @@ void startPrg()
                                                     780, 180,
                                                 0xC0);
                                                 
+                                                SetAPen(rastport, 66);
+                                                SetFont(rastport, myfont);
+                                                Move(rastport, 32, MARGIN + 32*16+128 + win->BorderTop + rastport->TxBaseline);
+                                                Text(rastport, "Positioning of ships", 20);
                                                 
                                                 // playing area
                                                 rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
