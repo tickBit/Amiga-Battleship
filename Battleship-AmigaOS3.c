@@ -396,7 +396,7 @@ void startPrg()
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
                                 Move(rastport, (800-TextLength(rastport, "Version 1.4.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.3.0", 13);
+                                Text(rastport, "Version 1.4.0", 13);
 
                                 Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
