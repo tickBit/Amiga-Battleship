@@ -17,7 +17,7 @@ This version still may have bugs.
 
 ## The colors might not differ anymore in different Amiga systems
 
-In this version (1.4.1) ObtainBestPenA() is used to get PenA colors.
+In this version (1.5.0) ObtainBestPenA() is used to get PenA colors.
 The function looks from the system best fit for given RGB codes, so now hopefully the colors are quite a like in different Amiga systems.
 
 ## Picture
