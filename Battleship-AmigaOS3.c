@@ -189,18 +189,18 @@ void __saveds MyBackfillFunc(
         
         struct BackFillInfo *bfi = (struct BackFillInfo *)Hook->h_Data;
 
-        //if (bfi == NULL || gBitMap == NULL) return;
+        if (bfi == NULL || gBitMap == NULL) return;
         
-        int dx = (rp->Layer->Width  - bfi->BitMapHeader->bmh_Width)  / 2;
-        //int dy = bfi->Screen->BarHeight + 1;
+        int dx = (rp->Layer->Width - bfi->BitMapHeader->bmh_Width)  / 2;
+        int dy = bfi->Screen->BarHeight + 1;
 
 
         /* Piirrä vain rajatulle alueelle */
     BltBitMapRastPort(
         gBitMap,
-        0, 0,      /* lähde alku */
+        0, 0,
         rp,
-        dx, borderTop,
+        dx, dy,
         800, 800,
         0xC0       /* COPY */
     );
@@ -322,10 +322,14 @@ void startPrg()
 
             if (gad != NULL) {
 
+
+                Backfill = &BF1;
+                memset(Backfill, 0, sizeof(struct BackFillInfo));
+            
                  /* Alusta backfill hook */
                 backfillHook.h_Entry = (HOOKFUNC)MyBackfillFunc;
                 backfillHook.h_SubEntry = NULL;
-                backfillHook.h_Data = NULL;
+                backfillHook.h_Data = Backfill;
                 
                 
                 if (LoadPicture(Backfill, name, scr))
@@ -343,7 +347,7 @@ void startPrg()
                         WA_CloseGadget, TRUE,
                         WA_BackFill,(ULONG)&backfillHook,
                         WA_Flags,       WFLG_ACTIVATE | WFLG_DRAGBAR,
-                        WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_REFRESHWINDOW | IDCMP_MOUSEMOVE | IDCMP_MOUSEBUTTONS | IDCMP_GADGETUP,
+                        WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEMOVE | IDCMP_MOUSEBUTTONS | IDCMP_GADGETUP,
                         TAG_END);
 
                     if (win) {
@@ -352,8 +356,7 @@ void startPrg()
                 
                         rastport = win->RPort;
                         borderTop = win->BorderTop;
-                        GT_RefreshWindow(win, NULL);
-
+                        
                         if (!(myfont = (struct TextFont*)OpenDiskFont(&myta))) {
                             printf("Failed to open CGTimes 72 font\nWill use Topaz 12...\n");
                             myfont = (struct TextFont*)OpenFont(&Topaz120);
