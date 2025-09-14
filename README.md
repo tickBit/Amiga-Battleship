@@ -1,6 +1,6 @@
 # Battleship game for AmigaOS 3
 
-Classic battle ship game with simple AI for AmigaOS 3.x. This is fixed version. I hope this works.
+Classic battle ship game with simple AI for AmigaOS 3.x. This is fixed version. There are still bugs, but the game should start and be playable.
 
 To position a ship, first click once on a ship, then simply move mouse to the grid and when a position to place a ship is found, click there.
 
@@ -17,7 +17,7 @@ This version still may have bugs.
 
 ## The colors might not differ anymore in different Amiga systems
 
-In this version (1.4.0) ObtainBestPenA() is used to get PenA colors.
+In this version (1.4.1) ObtainBestPenA() is used to get PenA colors.
 The function looks from the system best fit for given RGB codes, so now hopefully the colors are quite a like in different Amiga systems.
 
 ## Picture
