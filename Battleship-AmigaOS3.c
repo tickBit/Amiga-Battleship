@@ -1,7 +1,7 @@
 /*
         Battle ship game for Amiga a'la spaghetti...
 
-        Version 1.4.1
+        Version 1.5.0
 
         IMPORTANT:
 
@@ -396,8 +396,8 @@ void startPrg()
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (800-TextLength(rastport, "Version 1.4.1", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.4.1", 13);
+                                Move(rastport, (800-TextLength(rastport, "Version 1.5.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.5.0", 13);
 
                                 Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
@@ -455,10 +455,8 @@ void startPrg()
                                                         LockLayer(0, win->WLayer);
                                                         old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                         UnlockLayer(win->WLayer);
-
+                                                    
                                                         if (old) DisposeRegion(old);
-
-                                                        clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                     }     
                                                     
                                                     gridRegion = TRUE;
@@ -483,12 +481,11 @@ void startPrg()
                                                     OrRectRegion(newRegion, &rect);
 
                                                     LockLayer(0, win->WLayer);
-                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                     UnlockLayer(win->WLayer);
-
+                                                    
                                                     if (old) DisposeRegion(old);
 
-                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }
                                                 
                                                 
@@ -512,12 +509,10 @@ void startPrg()
                                                     OrRectRegion(newRegion, &rect);
 
                                                     LockLayer(0, win->WLayer);
-                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                     UnlockLayer(win->WLayer);
-
+                                                    
                                                     if (old) DisposeRegion(old);
-
-                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }
                                                 
                                                 // clear the screen a bit...
@@ -621,12 +616,10 @@ void startPrg()
                                                     OrRectRegion(newRegion, &rect);
 
                                                     LockLayer(0, win->WLayer);
-                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                     UnlockLayer(win->WLayer);
-
+                                                    
                                                     if (old) DisposeRegion(old);
-
-                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }
                                                 
                                                 gridRegion = FALSE;
@@ -653,10 +646,8 @@ void startPrg()
                                                     LockLayer(0, win->WLayer);
                                                     old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                     UnlockLayer(win->WLayer);
-
+                                                    
                                                     if (old) DisposeRegion(old);
-
-                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }     
                                                 
                                                 BltBitMapRastPort(gBitMap,
@@ -682,12 +673,10 @@ void startPrg()
                                                     OrRectRegion(newRegion, &rect);
 
                                                     LockLayer(0, win->WLayer);
-                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                     UnlockLayer(win->WLayer);
-
+                                                    
                                                     if (old) DisposeRegion(old);
-
-                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }
                                                 
                                                 // clear "Game on!" text
@@ -711,12 +700,10 @@ void startPrg()
                                                     OrRectRegion(newRegion, &rect);
 
                                                     LockLayer(0, win->WLayer);
-                                                    old = (struct Region *) InstallClipRegion(win->WLayer, newRegion);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                     UnlockLayer(win->WLayer);
-
+                                                    
                                                     if (old) DisposeRegion(old);
-
-                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }
                                                 
                                                 // clear the screen a bit...
@@ -743,10 +730,8 @@ void startPrg()
                                                     LockLayer(0, win->WLayer);
                                                     old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                     UnlockLayer(win->WLayer);
-
+                                                    
                                                     if (old) DisposeRegion(old);
-
-                                                    clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                 }     
                                                 
                                                 BltBitMapRastPort(gBitMap,
@@ -1058,10 +1043,8 @@ void startPrg()
                                                         LockLayer(0, win->WLayer);
                                                         old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
                                                         UnlockLayer(win->WLayer);
-
+                                                    
                                                         if (old) DisposeRegion(old);
-
-                                                        clipRegion = newRegion; /* talletetaan, jotta voidaan vapauttaa lopuksi */
                                                     }     
                                                     
                                                     gridRegion = TRUE;
@@ -1233,17 +1216,11 @@ void startPrg()
                         
                         WaitBlit();
                         
-                        /* Poistetaan ClipRegion turvallisesti */
                         if (clipInstalled) {
-                            
-                                LockLayer(0, win->WLayer);
-                                {
-                                    struct Region *old = (struct Region *)InstallClipRegion(win->WLayer, NULL);
-                                    if (old) DisposeRegion(old);
-                                }
-                                UnlockLayer(win->WLayer);
-                            } else if (clipRegion) {
-                            DisposeRegion(clipRegion);
+                            LockLayer(0, win->WLayer);
+                                struct Region *old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
+                                if (old) DisposeRegion(old);
+                            UnlockLayer(win->WLayer);
                         }
                         
                         CloseWindow(win);
