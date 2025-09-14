@@ -1277,6 +1277,15 @@ void startPrg()
         DiskfontBase        = OpenLibrary("diskfont.library", 39);
         
         if (!DataTypesBase || ! IntuitionBase || !GfxBase || !UtilityBase || !LayersBase || !GadToolsBase || !DiskfontBase) {
+            
+            if (DataTypesBase) CloseLibrary(DataTypesBase); else printf("datatypes.library version 39 not found\n");
+            if (IntuitionBase) CloseLibrary(IntuitionBase); else printf("intuition.library version 39 not found\n");
+            if (GfxBase) CloseLibrary(GfxBase); else printf("graphics.library version 39 not found\n");
+            if (UtilityBase) CloseLibrary(UtilityBase); else printf("utility.library version 39 not found\n");
+            if (LayersBase) CloseLibrary(LayersBase); else printf("layers.library version 39 not found\n");
+            if (GadToolsBase) CloseLibrary(GadToolsBase); else printf("gadtools.library version 39 not found\n");
+            if (DiskfontBase) CloseLibrary(DiskfontBase); else printf("diskfont.library version 39 not found\n");
+            
             return -1;
         }
 
