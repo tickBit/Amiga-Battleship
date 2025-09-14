@@ -1,7 +1,7 @@
 /*
         Battle ship game for Amiga a'la spaghetti...
 
-        Version 1.3.0
+        Version 1.4.0
 
         IMPORTANT:
 
@@ -19,6 +19,8 @@
         I taught myself new things while programming this.
         In my youth I thought I would never use layers.library.
         Now I have.
+        
+        This version probably still has bugs!
         
 */
 
@@ -121,6 +123,9 @@ ULONG penPinkHit;       // (204,136,255)
 ULONG penLightPinkTxt;  // (254,240,255)
 ULONG penLightBlueTxt;  // (99,206,255)
 
+ULONG penTitle;
+ULONG penTitleTxt;
+ULONG penGrid;
 
 struct TextAttr Topaz120 = { "topaz.font", 12, 0, 0, };
 struct TextAttr myta = {"CGTimes.font", 72, 0, 0};
@@ -168,8 +173,13 @@ int plyHits = 0;
 
 struct BackFillInfo BF1, *Backfill;
 
-// these settings might ONLY work with VBCC compiler!
+ULONG RGB32(ULONG val)
+{
+    return ((ULONG)val * 0x01010101UL);
+}
 
+
+// these settings might ONLY work with VBCC compiler!
 void __saveds MyBackfillFunc(
         __reg("a0") struct Hook *Hook,
         __reg("a2") struct RastPort *rp,
@@ -221,6 +231,50 @@ void startPrg()
         LONG Depth;
         
         borderTop = scr->BarHeight+1;
+        
+        penPink = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(237), RGB32(119), RGB32(255),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penLightPink = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(254), RGB32(204), RGB32(253),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(52), RGB32(100), RGB32(208),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penLightBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(102), RGB32(203), RGB32(255),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penWhite = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(237), RGB32(255), RGB32(255),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penPinkHit = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(204), RGB32(136), RGB32(255),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penLightPinkTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(254), RGB32(240), RGB32(255),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penLightBlueTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(99), RGB32(206), RGB32(255),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penTitle = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(97), RGB32(255), RGB32(254),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penTitleTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(218), RGB32(248), RGB32(246),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+        
+        penGrid = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB32(218), RGB32(220), RGB32(220),
+                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
         
         srand(time(NULL));
 
@@ -334,14 +388,14 @@ void startPrg()
                             
                             if (state == START_SCREEN) {
 
-                                SetAPen(rastport, 55);
+                                SetAPen(rastport, penTitle);
                                 SetFont(rastport, myfont);
                                 Move(rastport, (800-TextLength(rastport, "Battle ship", 11)) / 2, win->BorderTop+MARGIN + borderTop);
                                 Text(rastport, "Battle ship", 11);
 
                                 SetFont(rastport, myfont2);
-                                SetAPen(rastport, 41);
-                                Move(rastport, (800-TextLength(rastport, "Version 1.3.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                SetAPen(rastport, penTitleTxt);
+                                Move(rastport, (800-TextLength(rastport, "Version 1.4.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
                                 Text(rastport, "Version 1.3.0", 13);
 
                                 Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
@@ -357,7 +411,7 @@ void startPrg()
                             }
 
                             if (state == PLACE_SHIPS) {
-                                SetAPen(rastport, 66);
+                                SetAPen(rastport, penLightPinkTxt);
                                 SetFont(rastport, myfont);
                                 Move(rastport, 32, MARGIN + 32*16+128 + win->BorderTop + rastport->TxBaseline);
                                 Text(rastport, "Positioning of ships", 20);
@@ -365,21 +419,21 @@ void startPrg()
 
                             if (state == PLAY) {
                                 SetFont(rastport, myfont);
-                                SetAPen(rastport, 66);
+                                SetAPen(rastport, penLightPinkTxt);
                                 Move(rastport, 128, MARGIN + 32*16+128+32);
                                 Text(rastport, "Game on!", 8);
 
                                 SetFont(rastport, myfont2);
                                 
-                                SetAPen(rastport, 84);
+                                SetAPen(rastport, penBlue);
                                 RectFill(rastport, 32, MARGIN + 32*16+160-16 + 32, 32+32, MARGIN + 32*16+160+32-16 + 32);
-                                SetAPen(rastport, 66);
+                                SetAPen(rastport, penLightPinkTxt);
                                 Move(rastport, 32+68, MARGIN + 32*16+160+32);
                                 Text(rastport, "Human player has hit AI's ship", 30);
 
-                                SetAPen(rastport, 83);
+                                SetAPen(rastport, penLightBlue);
                                 RectFill(rastport, 32, MARGIN + 32*16+180 + 32, 32+32, MARGIN + 32*16+180+32 + 32);
-                                SetAPen(rastport, 66);
+                                SetAPen(rastport, penLightPinkTxt);
                                 Move(rastport, 32+68, MARGIN + 32*16+180+16+32);
                                 Text(rastport, "Human player has missed AI's ship", 33);
                                 
@@ -416,7 +470,7 @@ void startPrg()
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 512 + 56;
                                                 rect.MaxX = win->BorderLeft + 1 + 512 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 120;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 512 + 140;
                                                 
                                                 WaitBlit();
                                                 
@@ -479,15 +533,14 @@ void startPrg()
 
                             if (state == GAME_OVER) {
                                 SetFont(rastport, myfont);
-                                SetAPen(rastport, 99);
                                 Move(rastport, 32, MARGIN + 32*16+128+88);
                                 
                                 if (AIHits == 23) {
-                                    SetAPen(rastport, 62);
+                                    SetAPen(rastport, penLightPinkTxt);
                                     Text(rastport, "GAME OVER - I WON ;-)", 21);
                                 } else {
                                     if (plyHits == 23) {
-                                        SetAPen(rastport, 83);
+                                        SetAPen(rastport, penLightBlueTxt);
                                         Text(rastport, "Congratulations! You won!", 25);
                                     }
                                 }
@@ -670,7 +723,7 @@ void startPrg()
                                                     780, 180,
                                                 0xC0);
                                                 
-                                                SetAPen(rastport, 66);
+                                                SetAPen(rastport, penLightPinkTxt);
                                                 SetFont(rastport, myfont);
                                                 Move(rastport, 32, MARGIN + 32*16+128 + win->BorderTop + rastport->TxBaseline);
                                                 Text(rastport, "Positioning of ships", 20);
@@ -975,7 +1028,7 @@ void startPrg()
                                                                 board[bx + by * 16] = 4;
                                                                 plyHits++;
                                                             } else {
-                                                                printf("Choose another square\n");
+                                                                //printf("Choose another square\n");
                                                                 break;
                                                             }
                                                         }
@@ -1067,7 +1120,7 @@ void startPrg()
                                             
                                             prevExists = TRUE;
                                             
-                                            SetAPen(rastport, 29);
+                                            SetAPen(rastport, penWhite);
 
                                             switch (shipSelected) {
                                                 case 1:
@@ -1255,40 +1308,40 @@ int cleanup() {
             for (int i = 0; i < 16; i++) {
 
                 // player's ship
+                SetAPen(rp, penWhite);
                 if (board[i + j * 16] == 1) {
-                    SetAPen(rp, 101);
                     RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // computer's ship
+                SetAPen(rp, penBlue);
                 if (state == GAME_OVER && AIHits == 23) {
                     if (board[i + j * 16] == 2) {
-                        SetAPen(rp, 98);
                         RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                     }
                 }
 
                 // player's miss
+                SetAPen(rp, penLightBlue);
                 if (board[i + j * 16] == 3) {
-                    SetAPen(rp, 83);
                     RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // player's hit
                 if (board[i + j * 16] == 4) {
-                    SetAPen(rp, 84);
+                    SetAPen(rp, penBlue);
                     RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // computer's miss
                 if (board[i + j * 16] == 5) {
-                    SetAPen(rp, 88);
+                    SetAPen(rp, penLightPink);
                     RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
                 // computer's hit
                 if (board[i + j * 16] == 6) {
-                    SetAPen(rp, 74);
+                    SetAPen(rp, penPinkHit);
                     RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
                 }
 
@@ -1299,7 +1352,7 @@ int cleanup() {
 
     void drawShips(struct RastPort *rp) {
 
-        SetAPen(rp, 129);
+        SetAPen(rp, penPink);
 
         // draw ship 1
         for (int j = 0; j < 3; j++) {
@@ -1339,7 +1392,7 @@ int cleanup() {
 
     void drawGrid(struct RastPort *rp) {
 
-        SetAPen(rp, 100);
+        SetAPen(rp, penGrid);
         
         Move(rp, MARGIN,MARGIN+borderTop);
         Draw(rp, MARGIN+512,MARGIN+borderTop);
