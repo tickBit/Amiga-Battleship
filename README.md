@@ -20,6 +20,10 @@ This version still may have bugs.
 In this version (1.5.0) ObtainBestPenA() is used to get PenA colors.
 The function looks from the system best fit for given RGB codes, so now hopefully the colors are quite a like in different Amiga systems.
 
+## There's a light version, too
+
+I have added a light version of the game, that might work better than the heavier version. The inner size of the window in the light version is 600x600 pixels and there is only a title picture (that doesn't show up, if the game is started from icon) that is embedded in C code, only 1 bitplane.
+
 ## Picture
 
 Picture of the game running on AmiKit:
