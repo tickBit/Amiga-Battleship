@@ -185,7 +185,7 @@ void __saveds MyBackfillFunc(
     
     RectFill(rp,
         dx, dy,
-        dx+800, dy+800
+        dx+600, dy+600
     );
 }
 
@@ -272,8 +272,8 @@ void startPrg()
             /* gadgets */
             ng.ng_TextAttr   = &Topaz120;
             ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+24*16+64;
-            ng.ng_TopEdge    = MARGIN+24*16+24 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_LeftEdge   = MARGIN+24*16+32;
+            ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
             ng.ng_Width      = 100;
             ng.ng_Height     = 36;
             ng.ng_GadgetText = "PLAY";
@@ -283,9 +283,9 @@ void startPrg()
 
             ng.ng_TextAttr   = &Topaz120;
             ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+24;
-            ng.ng_TopEdge    = MARGIN+24*16+24 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 160;
+            ng.ng_LeftEdge   = MARGIN+32;
+            ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 120;
             ng.ng_Height     = 36;
             ng.ng_GadgetText = "Undo ship";
             ng.ng_GadgetID   = UNDO_BUTTON;
@@ -294,9 +294,9 @@ void startPrg()
 
             ng.ng_TextAttr   = &Topaz120;
             ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+24*16+64;
-            ng.ng_TopEdge    = MARGIN+24*16+24+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 160;
+            ng.ng_LeftEdge   = MARGIN+24*16+32;
+            ng.ng_TopEdge    = MARGIN+24*16+32+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 120;
             ng.ng_Height     = 36;
             ng.ng_GadgetText = "New game";
             ng.ng_GadgetID   = NEWGAME_BUTTON;
@@ -320,8 +320,8 @@ void startPrg()
                         WA_Title, "Battle ship game for AmigaOS 3 - light version",
                         WA_Top, 0,
                         WA_Left, 80,
-                        WA_InnerWidth, 800,
-                        WA_InnerHeight, 800,
+                        WA_InnerWidth, 600,
+                        WA_InnerHeight, 600,
                         WA_ReportMouse, TRUE,
                         WA_RMBTrap, TRUE,
                         WA_Gadgets, NULL,
@@ -372,15 +372,15 @@ void startPrg()
 
                                 SetAPen(rastport, penTitle);
                                 SetFont(rastport, myfont);
-                                Move(rastport, (800-TextLength(rastport, "Battle ship - light version", 27)) / 2, win->BorderTop+MARGIN + borderTop);
+                                Move(rastport, (600-TextLength(rastport, "Battle ship - light version", 27)) / 2, win->BorderTop+MARGIN + borderTop);
                                 Text(rastport, "Battle ship - light version", 27);
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (800-TextLength(rastport, "Version 1.0.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Move(rastport, (600-TextLength(rastport, "Version 1.0.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
                                 Text(rastport, "Version 1.0.0", 13);
 
-                                Move(rastport, (800-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
+                                Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
                                 
                             }
@@ -425,7 +425,7 @@ void startPrg()
                                                     WaitBlit();
                                                     
                                                     rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
-                                                    rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
+                                                    rect.MaxX = win->BorderLeft + 500; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
                                                     
                                                     
                                                     
@@ -452,9 +452,9 @@ void startPrg()
                                                 WaitBlit();
                                                                                                 
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 56;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 140;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 80;
                                                 
                                                 
                                                 
@@ -474,15 +474,15 @@ void startPrg()
                                                 // clear "Game on!" text
                                                 SetAPen(rastport, penBG);
                                                 RectFill(rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+70,
-                                                    win->BorderLeft+780, win->BorderTop + 180 + MARGIN+24*16+70);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+MARGIN,
+                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+MARGIN+20);
                                 
                                                 WaitBlit();
                                                 
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 126;
-                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN + 250;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 250;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN;
+                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN + 80;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 50;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -497,8 +497,8 @@ void startPrg()
                                                 // clear the screen a bit...
                                                 RectFill(
                                                     rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+126 + 1,
-                                                    win->BorderLeft + 780, win->BorderTop + MARGIN+24*16+126 + 1 + 180);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+26 + 1,
+                                                    win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+26 + 1 + 100);
                                                 
                                                 
                                                 // when the following is FALSE, eventually the Clip Region will change..
@@ -509,7 +509,7 @@ void startPrg()
 
                             if (state == GAME_OVER) {
                                 SetFont(rastport, myfont);
-                                Move(rastport, 24, MARGIN + 24*16+128+88);
+                                Move(rastport, 24, MARGIN + 24*16+50);
                                 
                                 if (AIHits == 23) {
                                     SetAPen(rastport, penLightPinkTxt);
@@ -576,8 +576,8 @@ void startPrg()
                                                 SetAPen(rastport, penBG);
                                                 RectFill(
                                                     rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+128,
-                                                    win->BorderLeft + 384+24, win->BorderTop + MARGIN+24*16+128 + 128);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+MARGIN,
+                                                    win->BorderLeft + 384+24, win->BorderTop + MARGIN+24*16+MARGIN+100);
                                                 
                                                 state = PLAY;
                                                 
@@ -586,7 +586,7 @@ void startPrg()
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 384;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 250;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 50;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -603,7 +603,7 @@ void startPrg()
                                                 RectFill(
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+24*16+70,
-                                                    win->BorderLeft + 600, win->BorderTop + MARGIN+24*16+70 + 120);
+                                                    win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+70 + 120);
                                                                                                 
                                                 break;
                                             case UNDO_BUTTON:
@@ -612,7 +612,7 @@ void startPrg()
                                                 WaitBlit();
                                                 // playing area
                                                 rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
-                                                rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
+                                                rect.MaxX = win->BorderLeft + 400; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
                                                     
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -628,7 +628,7 @@ void startPrg()
                                                 RectFill(
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop,
-                                                    win->BorderLeft + 700+MARGIN+40, win->BorderTop+384+MARGIN);
+                                                    win->BorderLeft + 400+MARGIN+40, win->BorderTop+384+MARGIN);
                                                 
                                                 undoCurrentPositioning();
                                                 break;
@@ -638,9 +638,9 @@ void startPrg()
                                                 WaitBlit();
                                                 
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 56;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 26;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 190;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 90;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -654,19 +654,18 @@ void startPrg()
                                                 
                                                 // clear "Game on!" text
                                                 SetAPen(rastport, penBG);
-                                                RectFill(
-                                                    rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+70,
-                                                    win->BorderLeft + 600, win->BorderTop + MARGIN+24*16+70 + 190);
+                                                RectFill(rastport,
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+MARGIN,
+                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+MARGIN+20);
 
                                                 
                                                 // clear "game over" text
                                                 WaitBlit();
                                                 
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 126;
-                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN + 250;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 250;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 26;
+                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN + 80;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 50;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -682,8 +681,8 @@ void startPrg()
                                                 SetAPen(rastport, penBG);
                                                 RectFill(
                                                     rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+126 + 1,
-                                                    win->BorderLeft + 780, win->BorderTop + MARGIN+24*16+126 + 1 + 180);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+26 + 1,
+                                                    win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+100 + 1);
                                                 
                                                 SetAPen(rastport, penLightPinkTxt);
                                                 SetFont(rastport, myfont);
@@ -693,7 +692,7 @@ void startPrg()
                                                 // playing area
                                                 WaitBlit();
                                                 rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
-                                                rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
+                                                rect.MaxX = win->BorderLeft + 400; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
                                                     
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -709,7 +708,7 @@ void startPrg()
                                                 RectFill(
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop,
-                                                    win->BorderLeft + 700+MARGIN+40, win->BorderTop + 384+MARGIN);
+                                                    win->BorderLeft + 400+MARGIN+40, win->BorderTop + 384+MARGIN);
                                                 
                                                 gridRegion = TRUE;
                                                 
@@ -782,7 +781,7 @@ void startPrg()
                                                 RectFill(
                                                 rastport,
                                                 win->BorderLeft, win->BorderTop,
-                                                win->BorderLeft + 800, win->BorderTop + 350);
+                                                win->BorderLeft + 500, win->BorderTop + 350);
                                             
 
                                                 AddGList(win, &glist, 0, -1, NULL);
@@ -1299,35 +1298,35 @@ int cleanup() {
         // draw ship 1
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 3; i++) {
-                if (ship1_[i+j*3] == 1) RectFill(rp, MARGIN+384+64+i*24, MARGIN+24+24+j*24-2, MARGIN+384+64+i*24+24, MARGIN+24+24+24+j*24-2);
+                if (ship1_[i+j*3] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+24+j*24-2, MARGIN+384+30+i*24+24, MARGIN+24+24+24+j*24-2);
             }
         }
 
         // draw ship 2
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 3; i++) {
-                if (ship2_[i+j*3] == 1) RectFill(rp, MARGIN+384+64+i*24, MARGIN+24+j*24 + 64+24+24, MARGIN+384+64+i*24+24, MARGIN+24+24+j*24 + 64+24+24);
+                if (ship2_[i+j*3] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+24);
             }
         }
 
         // draw ship 3
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < 2; i++) {
-                if (ship3_[i+j*3] == 1) RectFill(rp, MARGIN+384+64+i*24, MARGIN+24+j*24 + 64+24+64+24, MARGIN+384+64+i*24+24, MARGIN+24+24+j*24 + 64+24+64+24);
+                if (ship3_[i+j*3] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+30+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+30+24);
             }
         }
 
         // draw ship 4
         for (int j = 0; j < 4; j++) {
             for (int i = 0; i < 4; i++) {
-                if (ship4_[i+j*4] == 1) RectFill(rp, MARGIN+384+64+i*24, MARGIN+24+j*24 + 64+24+64+24+24+24+24, MARGIN+384+64+i*24+24, MARGIN+24+24+j*24 + 64+24+64+24+24+24+24);
+                if (ship4_[i+j*4] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+30+24+24+24+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+30+24+24+24+24);
             }
         }
 
         // draw ship 5
         for (int j = 0; j < 5; j++) {
             for (int i = 0; i < 5; i++) {
-                if (ship5_[i+j*5] == 1) RectFill(rp, MARGIN+384+64+i*24, MARGIN+24+j*24 + 64+24+64+24+24+24+24*4+24+24, MARGIN+384+64+i*24+24, MARGIN+24+24+j*24 + 64+24+64+24+24+24+24*4+24+24);
+                if (ship5_[i+j*5] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+30+24+24+24+24*4+24+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+30+24+24+24+24*4+24+24);
             }
         }
     }
