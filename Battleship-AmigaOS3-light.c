@@ -8,10 +8,7 @@
         Can be (probably) ONLY be compiled with VBCC
         --------------------------------------------
 
-        With VBCC: vc -c99 Battleship-AmigaOS3.c -o Battleship -lamiga -fpu=688881
-
-        While compiling, you'll get a lot of warnings from VBCC.
-        If necessary, increase stack (i.e. stack 20000 in AmigaDOS).
+        With VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=688881
 
         You can adjust the difficulty of the game by increasing or decreasing
         constant DIFFICULTY (and variable error).
@@ -44,6 +41,7 @@
 #include <intuition/intuition.h>
 #include <intuition/gadgetclass.h>
 #include <libraries/gadtools.h>
+#include <libraries/iffparse.h>
 #include <utility/hooks.h>
 
 #include <clib/intuition_protos.h>
@@ -53,6 +51,14 @@
 #include <clib/dos_protos.h>
 #include <clib/gadtools_protos.h>
 #include <clib/macros.h>
+#include <proto/iffparse.h>
+
+#include "battleship-pic-light.c"
+
+#define ID_ILBM MAKE_ID('I','L','B','M')
+#define ID_BMHD MAKE_ID('B','M','H','D')
+#define ID_CMAP MAKE_ID('C','M','A','P')
+#define ID_BODY MAKE_ID('B','O','D','Y')
 
 #define PLAY_BUTTON     (0)
 #define UNDO_BUTTON     (1)
@@ -127,6 +133,7 @@ void             *vi;
 WORD static borderTop;
 WORD static borderLeft;
 
+
 struct EasyStruct myES =
     {
         sizeof(struct EasyStruct),
@@ -160,7 +167,20 @@ BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 int AIHits = 0;
 int plyHits = 0;
 
+
+
 struct BackFillInfo BF1, *Backfill;
+
+UWORD __chip battleshipMaskData[4000];
+
+struct Image battleshipMask =
+{
+    0, 0,
+    320, 200, 1,
+    battleshipMaskData,
+    0x0001, 0x0000,
+    NULL
+};
 
 ULONG RGB24(ULONG val)
 {
@@ -192,6 +212,26 @@ void __saveds MyBackfillFunc(
     );
 }
 
+
+void GenerateMaskFromPenRGB(UWORD *bitmap, UWORD *mask, int size,
+                            UWORD penBG_R, UWORD penBG_G, UWORD penBG_B)
+{
+    for (int i = 0; i < size; i++)
+    {
+        UWORD pixel = bitmap[i];
+        // Oletetaan 5-5-5 R-G-B 16-bittinen formaatti: RRRRRGGGGGBBBBB
+        UWORD r = (pixel >> 10) & 0x1F;
+        UWORD g = (pixel >> 5) & 0x1F;
+        UWORD b = pixel & 0x1F;
+
+        mask[i] = (r != penBG_R || g != penBG_G || b != penBG_B) ? 0xFFFF : 0x0000;
+    }
+}
+
+
+
+
+
 void startPrg()
 {
         struct Region *clipRegion;
@@ -200,6 +240,8 @@ void startPrg()
         
         BOOL clipInstalled = FALSE;
         
+        struct BitMapHeader *bmhd;
+        
         int width, height;
         struct RastPort *rastport;
         struct TextFont *font;
@@ -207,6 +249,8 @@ void startPrg()
         struct InputEvent *ie;
         BOOL Done;
 
+        UWORD rBG, gBG, bBG;
+        
         struct Screen *scr = LockPubScreen("Workbench");
         glist = NULL;
         
@@ -336,11 +380,20 @@ void startPrg()
                         TAG_END);
 
                     if (win) {
-    
+                        
+                        rastport = win->RPort;
+                        
+                        struct BitMap bm;
+
+                        InitBitMap(&bm, 1, 320, 200);  // 1 plane, 320x200
+                        bm.Planes[0] = (PLANEPTR)battleshipData;
+
+                        BltBitMapRastPort(&bm, 0, 0,
+                            rastport, 140, 250,
+                            320, 200,
+                        0xC0);   // COPY
                         
                         BOOL gridRegion = FALSE;
-                
-                        rastport = win->RPort;
                         
                         borderTop = win->BorderTop;
                         
@@ -734,7 +787,7 @@ void startPrg()
                                                 RectFill(
                                                 rastport,
                                                 win->BorderLeft, win->BorderTop,
-                                                win->BorderLeft + 500, win->BorderTop + 350);
+                                                win->BorderLeft + 500, win->BorderTop + 550);
                                             
 
                                                 AddGList(win, &glist, 0, -1, NULL);
@@ -1167,12 +1220,11 @@ void startPrg()
         
         if (! IntuitionBase || !GfxBase || !UtilityBase || !LayersBase || !GadToolsBase) {
             
-            if (IntuitionBase) CloseLibrary(IntuitionBase); else printf("intuition.library version 39 not found\n");
-            if (GfxBase) CloseLibrary(GfxBase); else printf("graphics.library version 39 not found\n");
-            if (UtilityBase) CloseLibrary(UtilityBase); else printf("utility.library version 39 not found\n");
-            if (LayersBase) CloseLibrary(LayersBase); else printf("layers.library version 39 not found\n");
-            if (GadToolsBase) CloseLibrary(GadToolsBase); else printf("gadtools.library version 39 not found\n");
-            
+            if (IntuitionBase) CloseLibrary(IntuitionBase); else printf("intuition.library version 39 or newer not found\n");
+            if (GfxBase) CloseLibrary(GfxBase); else printf("graphics.library version 39 or newer not found\n");
+            if (UtilityBase) CloseLibrary(UtilityBase); else printf("utility.library version 39 or nevwer not found\n");
+            if (LayersBase) CloseLibrary(LayersBase); else printf("layers.library version 39 or newer not found\n");
+            if (GadToolsBase) CloseLibrary(GadToolsBase); else printf("gadtools.library version 39 or newer not found\n");
             return -1;
         }
 
@@ -1683,4 +1735,3 @@ int cleanup() {
         }
         
     }
-
