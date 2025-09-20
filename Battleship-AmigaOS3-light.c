@@ -113,7 +113,10 @@ ULONG penGrid;
 
 ULONG penBG;
 
-struct TextAttr Topaz120 = { "topaz.font", 12, 0, 0 };
+UWORD gridMarginX;
+UWORD gridMarginY;
+
+struct TextAttr Topaz12 = { "topaz.font", 12, 0, 0 };
 struct TextAttr Topaz16 = {"topaz.font", 16, 0, 0};
 struct TextFont *myfont, *myfont2;
 
@@ -270,7 +273,7 @@ void startPrg()
             gad = CreateContext(&glist);
 
             /* gadgets */
-            ng.ng_TextAttr   = &Topaz120;
+            ng.ng_TextAttr   = &Topaz12;
             ng.ng_VisualInfo = vi;
             ng.ng_LeftEdge   = MARGIN+24*16+32;
             ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
@@ -281,7 +284,7 @@ void startPrg()
             ng.ng_Flags      = 0;
             gads[PLAY_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
-            ng.ng_TextAttr   = &Topaz120;
+            ng.ng_TextAttr   = &Topaz12;
             ng.ng_VisualInfo = vi;
             ng.ng_LeftEdge   = MARGIN+32;
             ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
@@ -292,7 +295,7 @@ void startPrg()
             ng.ng_Flags      = 0;
             gads[UNDO_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
-            ng.ng_TextAttr   = &Topaz120;
+            ng.ng_TextAttr   = &Topaz12;
             ng.ng_VisualInfo = vi;
             ng.ng_LeftEdge   = MARGIN+24*16+32;
             ng.ng_TopEdge    = MARGIN+24*16+32+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
@@ -338,12 +341,14 @@ void startPrg()
                         BOOL gridRegion = FALSE;
                 
                         rastport = win->RPort;
+                        
                         borderTop = win->BorderTop;
                         
-                        GT_RefreshWindow(win, NULL);
+                        gridMarginX = MARGIN + win->BorderLeft;
+                        gridMarginY = MARGIN + win->BorderTop;
                                                 
                         myfont = (struct TextFont*)OpenFont(&Topaz16);
-                        myfont2 = (struct TextFont*)OpenFont(&Topaz120);
+                        myfont2 = (struct TextFont*)OpenFont(&Topaz12);
                         SetDrMd(rastport,0);
                         
                         struct Gadget *gadEvent;
@@ -814,8 +819,8 @@ void startPrg()
                                                             height = 5;
                                                     }
                                                     
-                                                    bx = (mx + MARGIN + win->BorderLeft) / 24 - 2;
-                                                    by = (my + MARGIN + win->BorderTop) / 24 - 4;
+                                                    bx = (mx - win->BorderLeft - MARGIN) / 24;
+                                                    by = (my - win->BorderTop - MARGIN) / 24;
                                                     
                                                         SetAPen(rastport, penBG);
                                                         RectFill(rastport,
@@ -965,8 +970,8 @@ void startPrg()
                                             }
                                             
                                             if (state == PLAY) {
-                                                    bx = (mx + MARGIN + win->BorderLeft) / 24 - 2;
-                                                    by = (my + MARGIN + win->BorderTop) / 24 - 4;
+                                                    bx = (mx - win->BorderLeft - MARGIN) / 24;
+                                                    by = (my - win->BorderTop - MARGIN) / 24;
 
                                                     //printf("bx=%d :: by=%d\n", bx, by);
                                                     
@@ -1001,7 +1006,7 @@ void startPrg()
                                                     WaitBlit();
                                                     
                                                     rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
-                                                    rect.MaxX = win->BorderLeft + 700; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
+                                                    rect.MaxX = win->BorderLeft + 500; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
                                                     
                                                     if ((newRegion = (struct Region *) NewRegion())) {
                                                         OrRectRegion(newRegion, &rect);
@@ -1251,39 +1256,39 @@ int cleanup() {
                 // player's ship
                 SetAPen(rp, penWhite);
                 if (board[i + j * 16] == 1) {
-                    RectFill(rp, MARGIN + i * 24+borderLeft, MARGIN + j * 24+borderTop, MARGIN + i * 24 + 24-1+borderLeft, MARGIN + j * 24 + 24-1+borderTop);
+                    RectFill(rp, i * 24 + gridMarginX, j * 24 + gridMarginY, i * 24 + 24-1+gridMarginX, j * 24 + 24-1+ gridMarginY);
                 }
 
                 // computer's ship
                 SetAPen(rp, penBlue);
                 if (state == GAME_OVER && AIHits == 23) {
                     if (board[i + j * 16] == 2) {
-                        RectFill(rp, MARGIN + i * 24+borderLeft, MARGIN + j * 24+borderTop, MARGIN + i * 24 + 24-1+borderLeft, MARGIN + j * 24 + 24-1+borderTop);
+                        RectFill(rp, i * 24 + gridMarginX, j * 24 + gridMarginY, i * 24 + 24-1 + gridMarginX, j * 24 + 24-1 + gridMarginY);
                     }
                 }
 
                 // player's miss
                 SetAPen(rp, penLightBlue);
                 if (board[i + j * 16] == 3) {
-                    RectFill(rp, MARGIN + i * 24+borderLeft, MARGIN + j * 24+borderTop, MARGIN + i * 24 + 24-1+borderLeft, MARGIN + j * 24 + 24-1+borderTop);
+                    RectFill(rp, i * 24+ gridMarginX, j * 24+ gridMarginY, i * 24 + 24-1 + gridMarginX, j * 24 + 24-1+gridMarginY);
                 }
 
                 // player's hit
                 if (board[i + j * 16] == 4) {
                     SetAPen(rp, penBlue);
-                    RectFill(rp, MARGIN + i * 24+borderLeft, MARGIN + j * 24+borderTop, MARGIN + i * 24 + 24-1+borderLeft, MARGIN + j * 24 + 24-1+borderTop);
+                    RectFill(rp, i * 24 + gridMarginX, j * 24 + gridMarginY, i * 24 + 24-1 + gridMarginX, j * 24 + 24-1 + gridMarginY);
                 }
 
                 // computer's miss
                 if (board[i + j * 16] == 5) {
                     SetAPen(rp, penLightPink);
-                    RectFill(rp, MARGIN + i * 24+borderLeft, MARGIN + j * 24+borderTop, MARGIN + i * 24 + 24-1+borderLeft, MARGIN + j * 24 + 24-1+borderTop);
+                    RectFill(rp, i * 24 + gridMarginX, j * 24 + gridMarginY, i * 24 + 24-1 + gridMarginX, j * 24 + 24-1 + gridMarginY);
                 }
 
                 // computer's hit
                 if (board[i + j * 16] == 6) {
                     SetAPen(rp, penPinkHit);
-                    RectFill(rp, MARGIN + i * 24+borderLeft, MARGIN + j * 24+borderTop, MARGIN + i * 24 + 24-1+borderLeft, MARGIN + j * 24 + 24-1+borderTop);
+                    RectFill(rp, i * 24 + gridMarginX, j * 24+gridMarginY, i * 24 + 24-1 + gridMarginX, j * 24 + 24-1 + gridMarginY);
                 }
 
                 
@@ -1335,26 +1340,26 @@ int cleanup() {
 
         SetAPen(rp, penGrid);
         
-        Move(rp, MARGIN,MARGIN+borderTop);
-        Draw(rp, MARGIN+384,MARGIN+borderTop);
+        Move(rp, MARGIN+win->BorderLeft,MARGIN+borderTop);
+        Draw(rp, MARGIN+384+win->BorderLeft,MARGIN+borderTop);
 
-        Move(rp, MARGIN+384,MARGIN+borderTop);
-        Draw(rp, MARGIN+384,MARGIN+384+borderTop);
+        Move(rp, MARGIN+384+win->BorderLeft,MARGIN+borderTop);
+        Draw(rp, MARGIN+384+win->BorderLeft,MARGIN+384+borderTop);
 
-        Move(rp, MARGIN+384,MARGIN+384+borderTop);
-        Draw(rp, MARGIN, MARGIN+384+borderTop);
+        Move(rp, MARGIN+384+win->BorderLeft,MARGIN+384+borderTop);
+        Draw(rp, MARGIN+win->BorderLeft, MARGIN+384+borderTop);
 
-        Move(rp, MARGIN, MARGIN+384+borderTop);
-        Draw(rp, MARGIN, MARGIN+borderTop);
+        Move(rp, MARGIN+win->BorderLeft, MARGIN+384+borderTop);
+        Draw(rp, MARGIN+win->BorderLeft, MARGIN+borderTop);
 
         for (int j = MARGIN+24; j < MARGIN+384; j+=24) {
-            Move(rp, MARGIN, j+borderTop);
-            Draw(rp, MARGIN+384, j+borderTop);
+            Move(rp, MARGIN+win->BorderLeft, j+borderTop);
+            Draw(rp, MARGIN+win->BorderLeft+384, j+borderTop);
         }
 
         for (int i = MARGIN+24; i < MARGIN+384; i+=24) {
-            Move(rp, i, MARGIN+borderTop);
-            Draw(rp, i, MARGIN+384+borderTop);
+            Move(rp, i+win->BorderLeft, MARGIN+borderTop);
+            Draw(rp, i+win->BorderLeft, MARGIN+384+borderTop);
         }
         
     }
