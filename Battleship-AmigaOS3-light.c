@@ -405,23 +405,19 @@ void startPrg()
                             }
 
                             if (state == PLAY) {
-                                SetFont(rastport, myfont);
-                                SetAPen(rastport, penLightPinkTxt);
-                                Move(rastport, 128, MARGIN + 24*16+128+24);
-                                Text(rastport, "Game on!", 8);
 
                                 SetFont(rastport, myfont2);
                                 
                                 SetAPen(rastport, penBlue);
-                                RectFill(rastport, 24, MARGIN + 24*16+160-16 + 24, 24+24, MARGIN + 24*16+160+24-16 + 24);
+                                RectFill(rastport, 24, MARGIN + 24*16+90-8 + 24, 24+24, MARGIN + 24*16+90+24-8 + 24);
                                 SetAPen(rastport, penLightPinkTxt);
-                                Move(rastport, 24+68, MARGIN + 24*16+160+24);
+                                Move(rastport, 24+42, MARGIN + 24*16+90+24+8);
                                 Text(rastport, "Human player has hit AI's ship", 30);
 
                                 SetAPen(rastport, penLightBlue);
-                                RectFill(rastport, 24, MARGIN + 24*16+180 + 24, 24+24, MARGIN + 24*16+180+24 + 24);
+                                RectFill(rastport, 24, MARGIN + 24*16+110 + 24 + 8, 24+24, MARGIN + 24*16+110+24 + 24 + 8);
                                 SetAPen(rastport, penLightPinkTxt);
-                                Move(rastport, 24+68, MARGIN + 24*16+180+16+24);
+                                Move(rastport, 24+42, MARGIN + 24*16+110+16+24+8);
                                 Text(rastport, "Human player has missed AI's ship", 33);
                                 
                                 // as long as these settings are in order, in-game texts can't be printed
@@ -457,9 +453,9 @@ void startPrg()
                                                 WaitBlit();
                                                                                                 
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 70;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 80;
+                                                rect.MaxY = win->BorderTop + 1 + 570;
                                                 
                                                 
                                                 
@@ -479,52 +475,25 @@ void startPrg()
                                                 // clear "Game on!" text
                                                 SetAPen(rastport, penBG);
                                                 RectFill(rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+MARGIN,
-                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+MARGIN+20);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+140,
+                                                    win->BorderLeft+500, win->BorderTop + 590);
                                 
-                                                WaitBlit();
                                                 
-                                                rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN;
-                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN + 80;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 50;
                                                 
-                                                if ((newRegion = (struct Region *) NewRegion())) {
-                                                    OrRectRegion(newRegion, &rect);
+                                               SetFont(rastport, myfont);
+                                               Move(rastport, gridMarginX + 32, MARGIN + 24*16+190);
 
-                                                    LockLayer(0, win->WLayer);
-                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
-                                                    UnlockLayer(win->WLayer);
-                                                    
-                                                    if (old) DisposeRegion(old);
+                                               if (AIHits == 23) {
+                                                    SetAPen(rastport, penLightPinkTxt);
+                                                    Text(rastport, "GAME OVER - I WON ;-)", 21);
+                                                } else {
+                                                if (plyHits == 23) {
+                                                    SetAPen(rastport, penLightBlueTxt);
+                                                    Text(rastport, "Congratulations! You won!", 25);
                                                 }
-                                                
-                                                // clear the screen a bit...
-                                                RectFill(
-                                                    rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+26 + 1,
-                                                    win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+26 + 1 + 100);
-                                                
-                                                
-                                                // when the following is FALSE, eventually the Clip Region will change..
-                                                gridRegion = FALSE;
-                                                
-                                                
-                            }
-
-                            if (state == GAME_OVER) {
-                                SetFont(rastport, myfont);
-                                Move(rastport, 24, MARGIN + 24*16+50);
-                                
-                                if (AIHits == 23) {
-                                    SetAPen(rastport, penLightPinkTxt);
-                                    Text(rastport, "GAME OVER - I WON ;-)", 21);
-                                } else {
-                                    if (plyHits == 23) {
-                                        SetAPen(rastport, penLightBlueTxt);
-                                        Text(rastport, "Congratulations! You won!", 25);
-                                    }
                                 }
+                                                
+                                                
                             }
 
                             Wait(1 << win->UserPort->mp_SigBit);
@@ -585,13 +554,13 @@ void startPrg()
                                                     win->BorderLeft + 384+24, win->BorderTop + MARGIN+24*16+MARGIN+100);
                                                 
                                                 state = PLAY;
-                                                
+                                
                                                 WaitBlit();
                                                 
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 384;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 50;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 150;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -605,10 +574,16 @@ void startPrg()
                                                 
                                                 gridRegion = FALSE;
                                                 
+                                                SetAPen(rastport, penBG);
                                                 RectFill(
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+24*16+70,
                                                     win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+70 + 120);
+                                                
+                                                SetFont(rastport, myfont);
+                                                SetAPen(rastport, penLightPinkTxt);
+                                                Move(rastport, 220, MARGIN + 24*16+128+50);
+                                                Text(rastport, "Game on!", 8);
                                                                                                 
                                                 break;
                                             case UNDO_BUTTON:
@@ -643,9 +618,9 @@ void startPrg()
                                                 WaitBlit();
                                                 
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 26;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 70;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 90;
+                                                rect.MaxY = win->BorderTop + 1 + 568;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -657,47 +632,20 @@ void startPrg()
                                                     if (old) DisposeRegion(old);
                                                 }
                                                 
-                                                // clear "Game on!" text
                                                 SetAPen(rastport, penBG);
                                                 RectFill(rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+MARGIN,
-                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+MARGIN+20);
-
-                                                
-                                                // clear "game over" text
-                                                WaitBlit();
-                                                
-                                                rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 26;
-                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN + 80;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 50;
-                                                
-                                                if ((newRegion = (struct Region *) NewRegion())) {
-                                                    OrRectRegion(newRegion, &rect);
-
-                                                    LockLayer(0, win->WLayer);
-                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
-                                                    UnlockLayer(win->WLayer);
-                                                    
-                                                    if (old) DisposeRegion(old);
-                                                }
-                                                
-                                                // clear the screen a bit...
-                                                SetAPen(rastport, penBG);
-                                                RectFill(
-                                                    rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+26 + 1,
-                                                    win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+100 + 1);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+60,
+                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+200);
                                                 
                                                 SetAPen(rastport, penLightPinkTxt);
                                                 SetFont(rastport, myfont);
                                                 Move(rastport, 24, MARGIN + 24*16+128 + win->BorderTop + rastport->TxBaseline);
                                                 Text(rastport, "Positioning of ships", 20);
-                                                
+                                
                                                 // playing area
                                                 WaitBlit();
                                                 rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
-                                                rect.MaxX = win->BorderLeft + 400; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
+                                                rect.MaxX = win->BorderLeft + 500; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
                                                     
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
