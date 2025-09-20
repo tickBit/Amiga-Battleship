@@ -41,7 +41,6 @@
 #include <intuition/intuition.h>
 #include <intuition/gadgetclass.h>
 #include <libraries/gadtools.h>
-#include <libraries/iffparse.h>
 #include <utility/hooks.h>
 
 #include <clib/intuition_protos.h>
@@ -51,14 +50,8 @@
 #include <clib/dos_protos.h>
 #include <clib/gadtools_protos.h>
 #include <clib/macros.h>
-#include <proto/iffparse.h>
 
 #include "battleship-pic-light.c"
-
-#define ID_ILBM MAKE_ID('I','L','B','M')
-#define ID_BMHD MAKE_ID('B','M','H','D')
-#define ID_CMAP MAKE_ID('C','M','A','P')
-#define ID_BODY MAKE_ID('B','O','D','Y')
 
 #define PLAY_BUTTON     (0)
 #define UNDO_BUTTON     (1)
@@ -211,25 +204,6 @@ void __saveds MyBackfillFunc(
         dx+600, dy+600
     );
 }
-
-
-void GenerateMaskFromPenRGB(UWORD *bitmap, UWORD *mask, int size,
-                            UWORD penBG_R, UWORD penBG_G, UWORD penBG_B)
-{
-    for (int i = 0; i < size; i++)
-    {
-        UWORD pixel = bitmap[i];
-        // Oletetaan 5-5-5 R-G-B 16-bittinen formaatti: RRRRRGGGGGBBBBB
-        UWORD r = (pixel >> 10) & 0x1F;
-        UWORD g = (pixel >> 5) & 0x1F;
-        UWORD b = pixel & 0x1F;
-
-        mask[i] = (r != penBG_R || g != penBG_G || b != penBG_B) ? 0xFFFF : 0x0000;
-    }
-}
-
-
-
 
 
 void startPrg()
