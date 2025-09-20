@@ -918,7 +918,7 @@ void startPrg()
                                                 
                                                 
                                                     
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 384 + 64 + 24 && mx + win->BorderLeft + MARGIN <= MARGIN + win->BorderLeft + 384 + 64 + 24 + 24*3 && my + win->BorderTop >= win->BorderTop + MARGIN && my + win->BorderTop <= MARGIN + win->BorderTop + 24*3) {
+                                                if (mx >= gridMarginX + 384 + 30 && mx <= gridMarginX + 30 + 384 + 24*3 && my >= gridMarginY && my <= gridMarginY + 24*3) {
                                                         if (shipsPlaced[0] == TRUE) break;
                                                         angle_ = 0;
                                                         shipSelected = 1;
@@ -927,7 +927,7 @@ void startPrg()
                                                         break;
                                                 }
 
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 384 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 384 + 64 + 24*3 && my + win->BorderTop >= MARGIN + 24 + 24*2 + 24 + 24 + 24 && my + win->BorderTop <= MARGIN + 24 + 24*2 + 24 + 24 + 24 + 24) {
+                                                if (mx >= gridMarginX + 384 + 30 && mx <= gridMarginX + 384 + 30 + 24*3 && my >= gridMarginY + 24*3 + 24 && my <= gridMarginY + 24*3 + 24 + 24) {
                                                         if (shipsPlaced[1] == TRUE) break;
                                                         angle_ = 0;
                                                         shipSelected = 2;
@@ -936,7 +936,7 @@ void startPrg()
                                                         break;
                                                 }
 
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 384 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 384 + 64 + 24*2 && my + win->BorderTop >= MARGIN + win->BorderTop + 24 + 24*2 + 24 + 24 + 24 + 24 && my + win->BorderTop <= MARGIN + win->BorderTop + 24 + 24*2 + 24 + 24 + 24*2 + 24 + 24) {
+                                                if (mx >= gridMarginX + 384 + 30 && mx <= gridMarginX + 384 + 30 +  24*2 && my >= gridMarginY + 24*3 + 24 + 24 + 24 && my <= gridMarginY + 24*3 + 24*3 + 24*2) {
                                                         if (shipsPlaced[2] == TRUE) break;
                                                         angle_ = 0;
                                                         shipSelected = 3;
@@ -946,7 +946,7 @@ void startPrg()
                                                         break;
                                                 }
 
-                                                if (mx + win->BorderLeft >= MARGIN + win->BorderLeft + 384 + 64 && mx + win->BorderLeft <= MARGIN + win->BorderLeft + 384 + 64 + 24*4 && my + win->BorderTop >= MARGIN + win->BorderTop + 24 + 24*2 + 24 + 24 + 24*2 + 24 && my + win->BorderTop <= MARGIN + 24 + 24*2 + 24 + 24 + 24*2 + 24 + 24*4) {
+                                                if (mx  >= gridMarginX + 384 + 30 && mx <= gridMarginX + 384 + 30 + 24*4 && my >= gridMarginY + 24*3 + 24 + 24*3 && my <= gridMarginY + 24 *3 + 24 + 24*3 + 24*4) {
                                                         if (shipsPlaced[3] == TRUE) break;
                                                         angle_ = 0;
                                                         shipSelected = 4;
@@ -1303,35 +1303,35 @@ int cleanup() {
         // draw ship 1
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 3; i++) {
-                if (ship1_[i+j*3] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+24+j*24-2, MARGIN+384+30+i*24+24, MARGIN+24+24+24+j*24-2);
+                if (ship1_[i+j*3] == 1) RectFill(rp, gridMarginX + 384+30+i*24, gridMarginY+j*24-2, gridMarginX + 384+30+i*24+24, gridMarginY+24+j*24);
             }
         }
 
         // draw ship 2
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 3; i++) {
-                if (ship2_[i+j*3] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+24);
+                if (ship2_[i+j*3] == 1) RectFill(rp, gridMarginX+384+30+i*24, gridMarginY+j*24 + 24*4, gridMarginX+384+30+i*24+24, gridMarginY + j*24 + 24*4 + 24);
             }
         }
 
         // draw ship 3
         for (int j = 0; j < 2; j++) {
             for (int i = 0; i < 2; i++) {
-                if (ship3_[i+j*3] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+30+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+30+24);
+                if (ship3_[i+j*3] == 1) RectFill(rp, gridMarginX+384+30+i*24, gridMarginY+j*24 + 24*4 + 24*2, gridMarginX+384+30+i*24+24, gridMarginY+j*24 + 24*4 + 24*2 + 24);
             }
         }
 
         // draw ship 4
         for (int j = 0; j < 4; j++) {
             for (int i = 0; i < 4; i++) {
-                if (ship4_[i+j*4] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+30+24+24+24+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+30+24+24+24+24);
+                if (ship4_[i+j*4] == 1) RectFill(rp, gridMarginX+384+30+i*24, gridMarginY+j*24 + 24*4 + 24*2 + 24*3, gridMarginX+384+30+i*24+24, gridMarginY+j*24 + 24*4 + 24*2 + 24*3 + 24);
             }
         }
 
         // draw ship 5
         for (int j = 0; j < 5; j++) {
             for (int i = 0; i < 5; i++) {
-                if (ship5_[i+j*5] == 1) RectFill(rp, MARGIN+384+30+i*24, MARGIN+24+j*24 + 64+24+30+24+24+24+24*4+24+24, MARGIN+384+30+i*24+24, MARGIN+24+24+j*24 + 64+24+30+24+24+24+24*4+24+24);
+                if (ship5_[i+j*5] == 1) RectFill(rp, gridMarginX+384+30+i*24, gridMarginY+j*24 + 24*4 + 24*2 + 24*3 + 24*5, gridMarginX+384+30+i*24+24, gridMarginY+j*24 + 24*4 + 24*2 + 24*3 + 24*5 + 24);
             }
         }
     }
