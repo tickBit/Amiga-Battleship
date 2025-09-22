@@ -409,8 +409,8 @@ void startPrg()
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (600-TextLength(rastport, "Version 1.0.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.0.0", 13);
+                                Move(rastport, (600-TextLength(rastport, "Version 1.1.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.1.0", 13);
 
                                 Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
@@ -429,49 +429,6 @@ void startPrg()
                                 SetFont(rastport, myfont);
                                 Move(rastport, 24, MARGIN + 24*16+128 + win->BorderTop + rastport->TxBaseline);
                                 Text(rastport, "Positioning of ships", 20);
-                            }
-
-                            if (state == PLAY) {
-
-                                SetFont(rastport, myfont2);
-                                
-                                SetAPen(rastport, penBlue);
-                                RectFill(rastport, 24, MARGIN + 24*16+90-8 + 24, 24+24, MARGIN + 24*16+90+24-8 + 24);
-                                SetAPen(rastport, penLightPinkTxt);
-                                Move(rastport, 24+42, MARGIN + 24*16+90+24+8);
-                                Text(rastport, "Human player has hit AI's ship", 30);
-
-                                SetAPen(rastport, penLightBlue);
-                                RectFill(rastport, 24, MARGIN + 24*16+110 + 24 + 8, 24+24, MARGIN + 24*16+110+24 + 24 + 8);
-                                SetAPen(rastport, penLightPinkTxt);
-                                Move(rastport, 24+42, MARGIN + 24*16+110+16+24+8);
-                                Text(rastport, "Human player has missed AI's ship", 33);
-                                
-                                // as long as these settings are in order, in-game texts can't be printed
-                                            if (gridRegion == FALSE) {
-                                                    
-                                                    WaitBlit();
-                                                    
-                                                    rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
-                                                    rect.MaxX = win->BorderLeft + 500; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
-                                                    
-                                                    
-                                                    
-                                                    
-                                                    if ((newRegion = (struct Region *) NewRegion())) {
-                                                        OrRectRegion(newRegion, &rect);
-
-                                                        LockLayer(0, win->WLayer);
-                                                        old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
-                                                        UnlockLayer(win->WLayer);
-                                                    
-                                                        if (old) DisposeRegion(old);
-                                                    }     
-                                                    
-                                                    gridRegion = TRUE;
-                                                    clipInstalled = TRUE;
-                                                }
-                                            
                             }
                             
                             if ((AIHits == 23 || plyHits == 23) && state != GAME_OVER) {
@@ -574,20 +531,20 @@ void startPrg()
                                                 placeComputersShips();
 
                                                 // clear "positioning of ships"
-                                                SetAPen(rastport, penBG);
+                                                /*SetAPen(rastport, penBG);
                                                 RectFill(
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+24*16+MARGIN,
                                                     win->BorderLeft + 384+24, win->BorderTop + MARGIN+24*16+MARGIN+100);
-                                                
+                                                */
                                                 state = PLAY;
-                                
+                                                    
                                                 WaitBlit();
                                                 
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 384;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 150;
+                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 180;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -597,9 +554,7 @@ void startPrg()
                                                     UnlockLayer(win->WLayer);
                                                     
                                                     if (old) DisposeRegion(old);
-                                                }
-                                                
-                                                gridRegion = FALSE;
+                                                }                                                
                                                 
                                                 SetAPen(rastport, penBG);
                                                 RectFill(
@@ -607,17 +562,54 @@ void startPrg()
                                                     win->BorderLeft, win->BorderTop + MARGIN+24*16+70,
                                                     win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+70 + 120);
                                                 
+                                                
+                                                SetFont(rastport, myfont2);
+                                
+                                                SetAPen(rastport, penBlue);
+                                                RectFill(rastport, 24, MARGIN + 24*16+90-8 + 24, 24+24, MARGIN + 24*16+90+24-8 + 24);
+                                                SetAPen(rastport, penLightPinkTxt);
+                                                Move(rastport, 24+42, MARGIN + 24*16+90+24+8);
+                                                Text(rastport, "Human player has hit AI's ship", 30);
+
+                                                SetAPen(rastport, penLightBlue);
+                                                RectFill(rastport, 24, MARGIN + 24*16+110 + 24 + 8, 24+24, MARGIN + 24*16+110+24 + 24 + 8);
+                                                SetAPen(rastport, penLightPinkTxt);
+                                                Move(rastport, 24+42, MARGIN + 24*16+110+16+24+8);
+                                                Text(rastport, "Human player has missed AI's ship", 33);
+                                
                                                 SetFont(rastport, myfont);
                                                 SetAPen(rastport, penLightPinkTxt);
-                                                Move(rastport, 220, MARGIN + 24*16+128+50);
+                                                Move(rastport, 220, MARGIN + 24*16+128+40 + win->BorderTop);
                                                 Text(rastport, "Game on!", 8);
-                                                                                                
+                                                
+                                                WaitBlit();
+                                                //
+                                                // playing area
+                                                //
+                                                
+                                                rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
+                                                rect.MaxX = win->BorderLeft + 500; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                                
+                                                    
+                                                if ((newRegion = (struct Region *) NewRegion())) {
+                                                    OrRectRegion(newRegion, &rect);
+
+                                                    LockLayer(0, win->WLayer);
+                                                    old = (struct Region *)InstallClipRegion(win->WLayer, newRegion);
+                                                    UnlockLayer(win->WLayer);
+                                                    
+                                                    if (old) DisposeRegion(old);
+                                                }     
+                                                    
+                                                clipInstalled = TRUE;
+                                                                                            
                                                 break;
                                             case UNDO_BUTTON:
                                                 if (state != PLACE_SHIPS) break;
                                                 
                                                 WaitBlit();
+                                                //
                                                 // playing area
+                                                //
                                                 rect.MinX = win->BorderLeft+8; rect.MinY = win->BorderTop+8;
                                                 rect.MaxX = win->BorderLeft + 400; rect.MaxY = win->BorderTop + MARGIN + 384 + 1;                            
                                                     
@@ -647,7 +639,7 @@ void startPrg()
                                                 rect.MinX = win->BorderLeft + 1;
                                                 rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 70;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + 568;
+                                                rect.MaxY = win->BorderTop + 1 + 24*16+MARGIN+180;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -662,7 +654,7 @@ void startPrg()
                                                 SetAPen(rastport, penBG);
                                                 RectFill(rastport,
                                                     win->BorderLeft, win->BorderTop + MARGIN+24*16+60,
-                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+200);
+                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+170);
                                                 
                                                 SetAPen(rastport, penLightPinkTxt);
                                                 SetFont(rastport, myfont);
@@ -689,9 +681,7 @@ void startPrg()
                                                     rastport,
                                                     win->BorderLeft, win->BorderTop,
                                                     win->BorderLeft + 400+MARGIN+40, win->BorderTop + 384+MARGIN);
-                                                
-                                                gridRegion = TRUE;
-                                                
+                                                                                                
                                                 initGame();
 
                                                 state = PLACE_SHIPS;
@@ -794,8 +784,8 @@ void startPrg()
                                                             height = 5;
                                                     }
                                                     
-                                                    bx = (mx - win->BorderLeft - MARGIN) / 24;
-                                                    by = (my - win->BorderTop - MARGIN) / 24;
+                                                    bx = (mx - gridMarginX) / 24;
+                                                    by = (my - gridMarginX) / 24;
                                                     
                                                         SetAPen(rastport, penBG);
                                                         RectFill(rastport,
@@ -945,8 +935,8 @@ void startPrg()
                                             }
                                             
                                             if (state == PLAY) {
-                                                    bx = (mx - win->BorderLeft - MARGIN) / 24;
-                                                    by = (my - win->BorderTop - MARGIN) / 24;
+                                                    bx = (mx - gridMarginX) / 24;
+                                                    by = (my - gridMarginY) / 24;
 
                                                     //printf("bx=%d :: by=%d\n", bx, by);
                                                     
@@ -1230,7 +1220,7 @@ int cleanup() {
                 // player's ship
                 SetAPen(rp, penWhite);
                 if (board[i + j * 16] == 1) {
-                    RectFill(rp, i * 24 + gridMarginX, j * 24 + gridMarginY, i * 24 + 24-1+gridMarginX, j * 24 + 24-1+ gridMarginY);
+                    RectFill(rp, i * 24+gridMarginX, j * 24 + gridMarginY, i * 24 + 24-1 + gridMarginX, j * 24 + 24-1 + gridMarginY);
                 }
 
                 // computer's ship
