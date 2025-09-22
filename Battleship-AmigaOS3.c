@@ -235,47 +235,47 @@ void startPrg()
         
         penPink = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(237), RGB32(119), RGB32(255),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penLightPink = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(254), RGB32(204), RGB32(253),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(52), RGB32(100), RGB32(208),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penLightBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(102), RGB32(203), RGB32(255),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penWhite = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(237), RGB32(255), RGB32(255),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penPinkHit = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(204), RGB32(136), RGB32(255),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penLightPinkTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(254), RGB32(240), RGB32(255),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penLightBlueTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(99), RGB32(206), RGB32(255),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penTitle = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(97), RGB32(255), RGB32(254),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penTitleTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(218), RGB32(248), RGB32(246),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         penGrid = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB32(218), RGB32(220), RGB32(220),
-                        OBP_Precision, PRECISION_IMAGE, TAG_DONE);
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         srand(time(NULL));
 
