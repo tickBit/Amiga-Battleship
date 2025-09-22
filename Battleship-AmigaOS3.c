@@ -1389,26 +1389,26 @@ int cleanup() {
 
         SetAPen(rp, penGrid);
         
-        Move(rp, MARGIN,MARGIN+borderTop);
-        Draw(rp, MARGIN+512,MARGIN+borderTop);
+        Move(rp, MARGIN+win->BorderLeft,MARGIN+borderTop);
+        Draw(rp, MARGIN+512+win->BorderLeft,MARGIN+borderTop);
 
-        Move(rp, MARGIN+512,MARGIN+borderTop);
-        Draw(rp, MARGIN+512,MARGIN+512+borderTop);
+        Move(rp, MARGIN+512+win->BorderLeft,MARGIN+borderTop);
+        Draw(rp, MARGIN+512+win->BorderLeft,MARGIN+512+borderTop);
 
-        Move(rp, MARGIN+512,MARGIN+512+borderTop);
-        Draw(rp, MARGIN, MARGIN+512+borderTop);
+        Move(rp, MARGIN+512+win->BorderLeft,MARGIN+512+borderTop);
+        Draw(rp, MARGIN+win->BorderLeft, MARGIN+512+borderTop);
 
-        Move(rp, MARGIN, MARGIN+512+borderTop);
-        Draw(rp, MARGIN, MARGIN+borderTop);
+        Move(rp, MARGIN+win->BorderLeft, MARGIN+512+borderTop);
+        Draw(rp, MARGIN+win->BorderLeft, MARGIN+borderTop);
 
         for (int j = MARGIN+32; j < MARGIN+512; j+=32) {
-            Move(rp, MARGIN, j+borderTop);
-            Draw(rp, MARGIN+512, j+borderTop);
+            Move(rp, MARGIN+win->BorderLeft, j+borderTop);
+            Draw(rp, MARGIN+win->BorderLeft+512, j+borderTop);
         }
 
         for (int i = MARGIN+32; i < MARGIN+512; i+=32) {
-            Move(rp, i, MARGIN+borderTop);
-            Draw(rp, i, MARGIN+512+borderTop);
+            Move(rp, i+win->BorderLeft, MARGIN+borderTop);
+            Draw(rp, i+win->BorderLeft, MARGIN+512+borderTop);
         }
         
     }
