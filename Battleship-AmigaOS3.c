@@ -10,7 +10,7 @@
 
         With VBCC: vc -c99 Battleship-AmigaOS3.c -o Battleship -lamiga -fpu=688881
 
-        While compiling, you'll get a lot of warning from VBCC.
+        While compiling, you'll get a lot of warnings from VBCC.
         If necessary, increase stack (i.e. stack 20000 in AmigaDOS).
 
         You can adjust the difficulty of the game by increasing or decreasing
@@ -126,6 +126,9 @@ ULONG penLightBlueTxt;  // (99,206,255)
 ULONG penTitle;
 ULONG penTitleTxt;
 ULONG penGrid;
+
+UWORD gridMarginX;
+UWORD gridMarginY;
 
 struct TextAttr Topaz120 = { "topaz.font", 12, 0, 0, };
 struct TextAttr myta = {"CGTimes.font", 72, 0, 0};
@@ -354,6 +357,9 @@ void startPrg()
                 
                         rastport = win->RPort;
                         borderTop = win->BorderTop;
+                        
+                        gridMarginX = MARGIN + win->BorderLeft;
+                        gridMarginY = MARGIN + win->BorderTop;
                         
                         if (!(myfont = (struct TextFont*)OpenDiskFont(&myta))) {
                             printf("Failed to open CGTimes 72 font\nWill use Topaz 12...\n");
@@ -846,8 +852,8 @@ void startPrg()
                                                             height = 5;
                                                     }
                                                     
-                                                    bx = (mx + MARGIN + win->BorderLeft) / 32 - 1;
-                                                    by = (my + MARGIN + win->BorderTop) / 32 - 2;
+                                                    bx = (mx - gridMarginX) / 32;
+                                                    by = (my - gridMarginY) / 32;
                                                     
                                                         BltBitMapRastPort(gBitMap,
                                                             bpmx, bpmy,
@@ -999,8 +1005,8 @@ void startPrg()
                                             }
                                             
                                             if (state == PLAY) {
-                                                bx = (mx + MARGIN + win->BorderLeft) / 32 - 2;
-                                                    by = (my + MARGIN + win->BorderTop) / 32 - 4;
+                                                    bx = (mx - gridMarginX) / 32;
+                                                    by = (my - gridMarginY) / 32;
 
                                                     //printf("bx=%d :: by=%d\n", bx, by);
                                                     
@@ -1299,39 +1305,39 @@ int cleanup() {
                 // player's ship
                 SetAPen(rp, penWhite);
                 if (board[i + j * 16] == 1) {
-                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
+                    RectFill(rp, i * 32 + gridMarginX, j * 32 + gridMarginY, i * 32 + 32-1+gridMarginX, j * 32 + 32-1+ gridMarginY);
                 }
 
                 // computer's ship
                 SetAPen(rp, penBlue);
                 if (state == GAME_OVER && AIHits == 23) {
                     if (board[i + j * 16] == 2) {
-                        RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
+                        RectFill(rp, i * 32 + gridMarginX, j * 32 + gridMarginY, i * 32 + 32-1 + gridMarginX, j * 32 + 32-1 + gridMarginY);
                     }
                 }
 
                 // player's miss
                 SetAPen(rp, penLightBlue);
                 if (board[i + j * 16] == 3) {
-                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
+                    RectFill(rp, i * 32+ gridMarginX, j * 32+ gridMarginY, i * 32 + 32-1 + gridMarginX, j * 32 + 32-1+gridMarginY);
                 }
 
                 // player's hit
                 if (board[i + j * 16] == 4) {
                     SetAPen(rp, penBlue);
-                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
+                    RectFill(rp, i * 32 + gridMarginX, j * 32 + gridMarginY, i * 32 + 32-1 + gridMarginX, j * 32 + 32-1 + gridMarginY);
                 }
 
                 // computer's miss
                 if (board[i + j * 16] == 5) {
                     SetAPen(rp, penLightPink);
-                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
+                    RectFill(rp, i * 32 + gridMarginX, j * 32 + gridMarginY, i * 32 + 32-1 + gridMarginX, j * 32 + 32-1 + gridMarginY);
                 }
 
                 // computer's hit
                 if (board[i + j * 16] == 6) {
                     SetAPen(rp, penPinkHit);
-                    RectFill(rp, MARGIN + i * 32+borderLeft, MARGIN + j * 32+borderTop, MARGIN + i * 32 + 32-1+borderLeft, MARGIN + j * 32 + 32-1+borderTop);
+                    RectFill(rp, i * 32 + gridMarginX, j * 32+gridMarginY, i * 32 + 32-1 + gridMarginX, j * 32 + 32-1 + gridMarginY);
                 }
 
                 
