@@ -1,14 +1,14 @@
 /*
         Battle ship game - light version for Amiga a'la spaghetti...
 
-        Version 1.0.0
+        Version 1.2.0
 
         IMPORTANT:
 
         Can be (probably) ONLY be compiled with VBCC
         --------------------------------------------
 
-        With VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=688881
+        With VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=68881
 
         You can adjust the difficulty of the game by increasing or decreasing
         constant DIFFICULTY (and variable error).
@@ -409,8 +409,8 @@ void startPrg()
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (600-TextLength(rastport, "Version 1.1.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.1.0", 13);
+                                Move(rastport, (600-TextLength(rastport, "Version 1.2.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.2.0", 13);
 
                                 Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
@@ -437,11 +437,10 @@ void startPrg()
                                                 WaitBlit();
                                                                                                 
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 70;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 50;
                                                 rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + 570;
-                                                
-                                                
+                                                rect.MaxY = gridMarginY + 384 + 70 + 170;
+                                                                                                
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -454,18 +453,18 @@ void startPrg()
 
                                                 }
                                                 
-                                                
+                                                WaitBlit();
                                                 
                                                 // clear "Game on!" text
                                                 SetAPen(rastport, penBG);
                                                 RectFill(rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+140,
-                                                    win->BorderLeft+500, win->BorderTop + 590);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+52,
+                                                    win->BorderLeft+500, gridMarginY + 384 + 70 + 168);
                                 
                                                 
                                                 
                                                SetFont(rastport, myfont);
-                                               Move(rastport, gridMarginX + 32, MARGIN + 24*16+190);
+                                               Move(rastport, gridMarginX + 32, gridMarginY + 24*16+140);
 
                                                if (AIHits == 23) {
                                                     SetAPen(rastport, penLightPinkTxt);
