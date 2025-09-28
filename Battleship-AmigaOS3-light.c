@@ -1,7 +1,7 @@
 /*
         Battle ship game - light version for Amiga a'la spaghetti...
 
-        Version 1.2.0
+        Version 1.2.1
 
         IMPORTANT:
 
@@ -160,20 +160,7 @@ BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 int AIHits = 0;
 int plyHits = 0;
 
-
-
 struct BackFillInfo BF1, *Backfill;
-
-UWORD __chip battleshipMaskData[4000];
-
-struct Image battleshipMask =
-{
-    0, 0,
-    320, 200, 1,
-    battleshipMaskData,
-    0x0001, 0x0000,
-    NULL
-};
 
 ULONG RGB24(ULONG val)
 {
@@ -409,8 +396,8 @@ void startPrg()
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (600-TextLength(rastport, "Version 1.2.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.2.0", 13);
+                                Move(rastport, (600-TextLength(rastport, "Version 1.2.1", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.2.1", 13);
 
                                 Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
@@ -1156,18 +1143,26 @@ void startPrg()
                             UnlockLayer(win->WLayer);
                         }
                         
+                        RemoveGList(win, glist, -1);
                         CloseWindow(win);
+                    } else {
+                        printf("Could not open the window. Is resolution too small?\n");
                     }
                 
+            } else {
+                printf("Couldn't make gadget list\n");
             }
-                
             FreeGadgets(glist);
 
+        } else {
+            printf("Couldn't get VisualInfo\n");
         }
             
                 
     
     FreeVisualInfo(vi);
+    
+    if (!scr) printf("Couldn't allocate Workbench as public screen\n");
     UnlockPubScreen(NULL, scr);
 
     cleanup();
@@ -1181,7 +1176,7 @@ void startPrg()
         LayersBase          = OpenLibrary("layers.library", 39);
         GadToolsBase        = OpenLibrary("gadtools.library", 39);
         
-        if (! IntuitionBase || !GfxBase || !UtilityBase || !LayersBase || !GadToolsBase) {
+        if (!IntuitionBase || !GfxBase || !UtilityBase || !LayersBase || !GadToolsBase) {
             
             if (IntuitionBase) CloseLibrary(IntuitionBase); else printf("intuition.library version 39 or newer not found\n");
             if (GfxBase) CloseLibrary(GfxBase); else printf("graphics.library version 39 or newer not found\n");
