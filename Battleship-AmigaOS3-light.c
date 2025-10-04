@@ -172,7 +172,7 @@ void startPrg()
         srand(time(NULL));
                 
                     win = OpenWindowTags (NULL,
-                        WA_Title,(ULONG)"Battle ship game for AmigaOS 3 - unofficial test version",
+                        WA_Title,(ULONG)"Battle ship game for AmigaOS 3 - light version",
                         WA_Top, 0,
                         WA_Left, 80,
                         WA_InnerWidth, 600,
