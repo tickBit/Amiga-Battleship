@@ -1,12 +1,7 @@
 /*
         Battle ship game - light version for Amiga a'la spaghetti...
 
-        Version 1.4.0
-
-        IMPORTANT:
-
-        Can be (probably) ONLY be compiled with VBCC
-        --------------------------------------------
+        Version 1.4.1
 
         With VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=68881
 
@@ -41,7 +36,6 @@
 #include <intuition/intuition.h>
 #include <intuition/gadgetclass.h>
 #include <libraries/gadtools.h>
-#include <utility/hooks.h>
 
 #include <clib/intuition_protos.h>
 #include <clib/utility_protos.h>
@@ -249,7 +243,6 @@ void startPrg()
 
 
                         vi = GetVisualInfo(scr, TAG_END);
-                        printf("VisualInfo ptr: %p\n", vi);
                         
                         if (!vi) {
                             printf("Could not get VisualInfo of screen\n");
@@ -346,8 +339,7 @@ void startPrg()
                         */
                         while(!Done)
                         {
-
-                            
+                         
                             if (state == START_SCREEN) {
 
                                 SetAPen(rastport, penTitle);
@@ -357,8 +349,8 @@ void startPrg()
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (600-TextLength(rastport, "Version 1.4.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.4.0", 13);
+                                Move(rastport, (600-TextLength(rastport, "Version 1.4.1", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.4.1", 13);
 
                                 Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
