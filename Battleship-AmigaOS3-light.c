@@ -1,14 +1,9 @@
 /*
         Battle ship game - light version for Amiga a'la spaghetti...
 
-        Version 1.2.1
+        Version 1.3.0
 
-        IMPORTANT:
-
-        Can be (probably) ONLY be compiled with VBCC
-        --------------------------------------------
-
-        With VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=68881
+        Compiling with VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=68881
 
         You can adjust the difficulty of the game by increasing or decreasing
         constant DIFFICULTY (and variable error).
@@ -41,7 +36,6 @@
 #include <intuition/intuition.h>
 #include <intuition/gadgetclass.h>
 #include <libraries/gadtools.h>
-#include <utility/hooks.h>
 
 #include <clib/intuition_protos.h>
 #include <clib/utility_protos.h>
@@ -73,6 +67,7 @@ struct Library *GadToolsBase = NULL;
 struct Library *LayersBase = NULL;
 
 struct Window *win = NULL;
+struct Screen *scr = NULL;
 
 int undoShip = 0;
 int undoBoard[16*16];
@@ -120,8 +115,9 @@ struct TextAttr Topaz16 = {"topaz.font", 16, 0, 0};
 struct TextFont *myfont, *myfont2;
 
 struct Gadget    *glist, *gads[3];
+struct Gadget    *gad = NULL;
 struct NewGadget ng;
-void             *vi;
+APTR vi = NULL;
 
 WORD static borderTop;
 WORD static borderLeft;
@@ -136,60 +132,15 @@ struct EasyStruct myES =
         "Ok",
     };
 
-struct BackFillInfo
-{
-	struct Hook            Hook;
-	struct Screen         *Screen;
-	Object                *PictureObject;
-	struct BitMapHeader   *BitMapHeader;
-	struct BitMap         *BitMap;
-	WORD                   CopyWidth;
-	WORD                   CopyHeight;
-};
-
-struct BackFillMsg
-{
-	struct Layer    *Layer;
-	struct Rectangle Bounds;
-	LONG             OffsetX;
-	LONG             OffsetY;
-};
 
 BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 
 int AIHits = 0;
 int plyHits = 0;
 
-struct BackFillInfo BF1, *Backfill;
-
 ULONG RGB24(ULONG val)
 {
     return ((ULONG)val * 0x01010101UL);
-}
-
-
-// these settings might ONLY work with VBCC compiler!
-void __saveds MyBackfillFunc(
-        __reg("a0") struct Hook *Hook,
-        __reg("a2") struct RastPort *rp,
-        __reg("a1") struct BackFillMessage *bfa)
-
-    {
-        
-        struct BackFillInfo *bfi = (struct BackFillInfo *)Hook->h_Data;
-
-        if (bfi == NULL) return;
-        
-        int dx = bfi->Screen->WBorLeft;
-        int dy = bfi->Screen->BarHeight + 1;
-
-
-    SetAPen(rp, penBG);
-    
-    RectFill(rp,
-        dx, dy,
-        dx+600, dy+600
-    );
 }
 
 
@@ -212,120 +163,16 @@ void startPrg()
 
         UWORD rBG, gBG, bBG;
         
-        struct Screen *scr = LockPubScreen("Workbench");
         glist = NULL;
         
         LONG Depth;
         
-        borderTop = scr->BarHeight+1;
         
-        penPink = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(237), RGB24(119), RGB24(255),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penLightPink = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(254), RGB24(204), RGB24(253),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(52), RGB24(100), RGB24(208),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penLightBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(102), RGB24(203), RGB24(255),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penWhite = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(237), RGB24(255), RGB24(255),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penPinkHit = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(204), RGB24(136), RGB24(255),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penLightPinkTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(254), RGB24(240), RGB24(255),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penLightBlueTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(99), RGB24(206), RGB24(255),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penTitle = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(97), RGB24(255), RGB24(254),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penTitleTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(218), RGB24(248), RGB24(246),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penGrid = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(218), RGB24(220), RGB24(220),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
-        
-        penBG = ObtainBestPenA(scr->ViewPort.ColorMap,
-                        RGB24(102), RGB24(120), RGB24(200),
-                        OBP_Precision, PRECISION_GUI, TAG_DONE);
         
         srand(time(NULL));
-
-        if ( (vi = GetVisualInfo(scr, TAG_END)) != NULL )
-        {
-
-            struct Gadget *gad;
-
-            /* GadTools gadgets require this step to be taken */
-            gad = CreateContext(&glist);
-
-            /* gadgets */
-            ng.ng_TextAttr   = &Topaz12;
-            ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+24*16+32;
-            ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 100;
-            ng.ng_Height     = 36;
-            ng.ng_GadgetText = "PLAY";
-            ng.ng_GadgetID   = PLAY_BUTTON;
-            ng.ng_Flags      = 0;
-            gads[PLAY_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
-
-            ng.ng_TextAttr   = &Topaz12;
-            ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+32;
-            ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 120;
-            ng.ng_Height     = 36;
-            ng.ng_GadgetText = "Undo ship";
-            ng.ng_GadgetID   = UNDO_BUTTON;
-            ng.ng_Flags      = 0;
-            gads[UNDO_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
-
-            ng.ng_TextAttr   = &Topaz12;
-            ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+24*16+32;
-            ng.ng_TopEdge    = MARGIN+24*16+32+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 120;
-            ng.ng_Height     = 36;
-            ng.ng_GadgetText = "New game";
-            ng.ng_GadgetID   = NEWGAME_BUTTON;
-            ng.ng_Flags      = 0;
-            gads[NEWGAME_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
-
-            if (gad != NULL) {
-
-
-                Backfill = &BF1;
-                memset(Backfill, 0, sizeof(struct BackFillInfo));
-            
-                 /* Alusta backfill hook */
-                Backfill->Hook.h_Entry = (HOOKFUNC)MyBackfillFunc;
-                Backfill->Hook.h_SubEntry = NULL;
-                Backfill->Hook.h_Data = Backfill;
-                
-                Backfill->Screen = scr;
                 
                     win = OpenWindowTags (NULL,
-                        WA_Title, "Battle ship game for AmigaOS 3 - light version",
+                        WA_Title,(ULONG)"Battle ship game for AmigaOS 3 - unofficial test version",
                         WA_Top, 0,
                         WA_Left, 80,
                         WA_InnerWidth, 600,
@@ -335,25 +182,116 @@ void startPrg()
                         WA_Gadgets, NULL,
                         WA_SmartRefresh, TRUE,
                         WA_CloseGadget, TRUE,
-                        WA_BackFill,(ULONG)&Backfill->Hook,
+                        WA_PubScreenName, (ULONG)"Workbench",
                         WA_Flags,       WFLG_ACTIVATE | WFLG_DRAGBAR,
                         WA_IDCMP, IDCMP_CLOSEWINDOW | IDCMP_MOUSEMOVE | IDCMP_MOUSEBUTTONS | IDCMP_GADGETUP,
                         TAG_END);
 
                     if (win) {
-                        
+                                                
                         rastport = win->RPort;
-                        
-                        struct BitMap bm;
 
-                        InitBitMap(&bm, 1, 320, 200);  // 1 plane, 320x200
-                        bm.Planes[0] = (PLANEPTR)battleshipData;
-
-                        BltBitMapRastPort(&bm, 0, 0,
-                            rastport, 140, 250,
-                            320, 200,
-                        0xC0);   // COPY
+                        scr = win->WScreen;
                         
+                        penPink = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(237), RGB24(119), RGB24(255),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penLightPink = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(254), RGB24(204), RGB24(253),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(52), RGB24(100), RGB24(208),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penLightBlue = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(102), RGB24(203), RGB24(255),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penWhite = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(237), RGB24(255), RGB24(255),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penPinkHit = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(204), RGB24(136), RGB24(255),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penLightPinkTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(254), RGB24(240), RGB24(255),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penLightBlueTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(99), RGB24(206), RGB24(255),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penTitle = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(97), RGB24(255), RGB24(254),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penTitleTxt = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(218), RGB24(248), RGB24(246),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penGrid = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(218), RGB24(220), RGB24(220),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+        
+                        penBG = ObtainBestPenA(scr->ViewPort.ColorMap,
+                        RGB24(102), RGB24(120), RGB24(200),
+                        OBP_Precision, PRECISION_GUI, TAG_DONE);
+
+
+                        vi = GetVisualInfo(scr, TAG_END);
+                        if (!vi) {
+                            printf("Could not get VisualInfo of screen\n");
+                            cleanup();
+                            return;
+                        }
+
+                        /* GadTools gadgets require this step to be taken */
+                        gad = CreateContext(&glist);
+
+                        /* gadgets */
+                        ng.ng_TextAttr   = &Topaz12;
+                        ng.ng_VisualInfo = vi;
+                        ng.ng_LeftEdge   = MARGIN+24*16+32;
+                        ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+                        ng.ng_Width      = 100;
+                        ng.ng_Height     = 36;
+                        ng.ng_GadgetText = "PLAY";
+                        ng.ng_GadgetID   = PLAY_BUTTON;
+                        ng.ng_Flags      = 0;
+                        gads[PLAY_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
+
+                        ng.ng_TextAttr   = &Topaz12;
+                        ng.ng_VisualInfo = vi;
+                        ng.ng_LeftEdge   = MARGIN+32;
+                        ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+                        ng.ng_Width      = 120;
+                        ng.ng_Height     = 36;
+                        ng.ng_GadgetText = "Undo ship";
+                        ng.ng_GadgetID   = UNDO_BUTTON;
+                        ng.ng_Flags      = 0;
+                        gads[UNDO_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
+
+                        ng.ng_TextAttr   = &Topaz12;
+                        ng.ng_VisualInfo = vi;
+                        ng.ng_LeftEdge   = MARGIN+24*16+32;
+                        ng.ng_TopEdge    = MARGIN+24*16+32+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+                        ng.ng_Width      = 120;
+                        ng.ng_Height     = 36;
+                        ng.ng_GadgetText = "New game";
+                        ng.ng_GadgetID   = NEWGAME_BUTTON;
+                        ng.ng_Flags      = 0;
+                        gads[NEWGAME_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
+
+                        if (gad == NULL) {
+                            printf("Could not create gadgets\n");
+                            cleanup();
+                            return;
+                        }
+                                                                        
                         BOOL gridRegion = FALSE;
                         
                         borderTop = win->BorderTop;
@@ -378,8 +316,23 @@ void startPrg()
                         int bx, by, mx, my, pmx, pmy, fillWidth, fillHeight, bpmx, bpmy;
 
                         state = START_SCREEN;
+                                              
+                        SetAPen(rastport, penBG);
+                        RectFill(rastport,win->BorderLeft,win->BorderTop,600+win->BorderLeft,600+win->BorderTop);   
                         
-                                                
+                        struct BitMap bm;
+
+
+                        InitBitMap(&bm, 1, 320, 200);  // 1 plane, 320x200
+                        bm.Planes[0] = (PLANEPTR)battleshipData;
+
+                        WaitBlit();
+                        
+                        BltBitMapRastPort(&bm, 0, 0,
+                            rastport, 140, 250,
+                            320, 200,
+                        0xC0);   // COPY
+                                               
                         /*
                         *  Main event loop
                         */
@@ -396,8 +349,8 @@ void startPrg()
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (600-TextLength(rastport, "Version 1.2.1", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.2.1", 13);
+                                Move(rastport, (600-TextLength(rastport, "Version 1.3.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.3.0", 13);
 
                                 Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
@@ -1144,32 +1097,18 @@ void startPrg()
                         }
                         
                         RemoveGList(win, glist, -1);
-                        CloseWindow(win);
+                        FreeGadgets(glist);
+                        
                     } else {
-                        printf("Could not open the window. Is resolution too small?\n");
+                        printf("Opening the window failed\n");
                     }
-                
-            } else {
-                printf("Couldn't make gadget list\n");
-            }
-            FreeGadgets(glist);
 
-        } else {
-            printf("Couldn't get VisualInfo\n");
-        }
-            
-                
-    
-    FreeVisualInfo(vi);
-    
-    if (!scr) printf("Couldn't allocate Workbench as public screen\n");
-    UnlockPubScreen(NULL, scr);
 
     cleanup();
 }
 
- int main(int argc,char **argv)
-    {
+ int main()
+    {        
         IntuitionBase       = OpenLibrary("intuition.library", 39);
         GfxBase             = OpenLibrary("graphics.library", 39);
         UtilityBase         = OpenLibrary("utility.library", 39);
@@ -1185,16 +1124,8 @@ void startPrg()
             if (GadToolsBase) CloseLibrary(GadToolsBase); else printf("gadtools.library version 39 or newer not found\n");
             return -1;
         }
-
+        
         startPrg();
-
-
-        return 0;
-
-    }
-
-
-int cleanup() {
 
         CloseLibrary(IntuitionBase);
         CloseLibrary(UtilityBase);
@@ -1202,7 +1133,17 @@ int cleanup() {
         CloseLibrary(GadToolsBase);
         CloseLibrary(LayersBase);
         
-        return;
+        return 0;
+
+    }
+
+
+int cleanup() {
+
+        if (vi != NULL) FreeVisualInfo(vi);
+        if (win != NULL) CloseWindow(win);
+        
+        return 0;
 
     }
 
