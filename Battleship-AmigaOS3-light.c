@@ -1,9 +1,14 @@
 /*
         Battle ship game - light version for Amiga a'la spaghetti...
 
-        Version 1.3.0
+        Version 1.4.0
 
-        Compiling with VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=68881
+        IMPORTANT:
+
+        Can be (probably) ONLY be compiled with VBCC
+        --------------------------------------------
+
+        With VBCC: vc -c99 Battleship-AmigaOS3-light.c -o Battleship-light -lamiga -fpu=68881
 
         You can adjust the difficulty of the game by increasing or decreasing
         constant DIFFICULTY (and variable error).
@@ -36,6 +41,7 @@
 #include <intuition/intuition.h>
 #include <intuition/gadgetclass.h>
 #include <libraries/gadtools.h>
+#include <utility/hooks.h>
 
 #include <clib/intuition_protos.h>
 #include <clib/utility_protos.h>
@@ -114,7 +120,7 @@ struct TextAttr Topaz12 = { "topaz.font", 12, 0, 0 };
 struct TextAttr Topaz16 = {"topaz.font", 16, 0, 0};
 struct TextFont *myfont, *myfont2;
 
-struct Gadget    *glist, *gads[3];
+struct Gadget    *glist = NULL, *gads[3] = { NULL };
 struct Gadget    *gad = NULL;
 struct NewGadget ng;
 APTR vi = NULL;
@@ -146,8 +152,8 @@ ULONG RGB24(ULONG val)
 
 void startPrg()
 {
-        struct Region *clipRegion;
-        struct Region *old, *newRegion;
+        struct Region *clipRegion = NULL;
+        struct Region *old = NULL, *newRegion = NULL;
         struct Rectangle rect;
         
         BOOL clipInstalled = FALSE;
@@ -155,10 +161,10 @@ void startPrg()
         struct BitMapHeader *bmhd;
         
         int width, height;
-        struct RastPort *rastport;
-        struct TextFont *font;
-        struct IntuiMessage *Message; 
-        struct InputEvent *ie;
+        struct RastPort *rastport = NULL;
+        struct TextFont *font = NULL;
+        struct IntuiMessage *Message = NULL; 
+        struct InputEvent *ie = NULL;
         BOOL Done;
 
         UWORD rBG, gBG, bBG;
@@ -192,7 +198,7 @@ void startPrg()
                         rastport = win->RPort;
 
                         scr = win->WScreen;
-                        
+                                                
                         penPink = ObtainBestPenA(scr->ViewPort.ColorMap,
                         RGB24(237), RGB24(119), RGB24(255),
                         OBP_Precision, PRECISION_GUI, TAG_DONE);
@@ -243,6 +249,8 @@ void startPrg()
 
 
                         vi = GetVisualInfo(scr, TAG_END);
+                        printf("VisualInfo ptr: %p\n", vi);
+                        
                         if (!vi) {
                             printf("Could not get VisualInfo of screen\n");
                             cleanup();
@@ -251,7 +259,7 @@ void startPrg()
 
                         /* GadTools gadgets require this step to be taken */
                         gad = CreateContext(&glist);
-
+                        
                         /* gadgets */
                         ng.ng_TextAttr   = &Topaz12;
                         ng.ng_VisualInfo = vi;
@@ -263,7 +271,7 @@ void startPrg()
                         ng.ng_GadgetID   = PLAY_BUTTON;
                         ng.ng_Flags      = 0;
                         gads[PLAY_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
-
+                        
                         ng.ng_TextAttr   = &Topaz12;
                         ng.ng_VisualInfo = vi;
                         ng.ng_LeftEdge   = MARGIN+32;
@@ -285,7 +293,7 @@ void startPrg()
                         ng.ng_GadgetID   = NEWGAME_BUTTON;
                         ng.ng_Flags      = 0;
                         gads[NEWGAME_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
-
+                        
                         if (gad == NULL) {
                             printf("Could not create gadgets\n");
                             cleanup();
@@ -303,7 +311,7 @@ void startPrg()
                         myfont2 = (struct TextFont*)OpenFont(&Topaz12);
                         SetDrMd(rastport,0);
                         
-                        struct Gadget *gadEvent;
+                        struct Gadget *gadEvent = NULL;
 
                         ULONG MsgClass;
                         UWORD code;
@@ -349,8 +357,8 @@ void startPrg()
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (600-TextLength(rastport, "Version 1.3.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.3.0", 13);
+                                Move(rastport, (600-TextLength(rastport, "Version 1.4.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.4.0", 13);
 
                                 Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
@@ -691,15 +699,12 @@ void startPrg()
                                                 rastport,
                                                 win->BorderLeft, win->BorderTop,
                                                 win->BorderLeft + 500, win->BorderTop + 550);
-                                            
-
-                                                AddGList(win, &glist, 0, -1, NULL);
+                                                
+                                                AddGList(win, glist, 0, -1, NULL);
                                                 RefreshGList(win->FirstGadget, win, NULL, -1);
-
+                                                
                                                 state = PLACE_SHIPS;
-                                                
-                                                
-                                                
+                                                                                               
                                                 break;
                                             
                                             }
