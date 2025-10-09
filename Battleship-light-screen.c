@@ -1,9 +1,7 @@
 /*
         Battle ship game - light version with own screen for Amiga a'la spaghetti...
 
-        Motivation for this version: ObtainBestPenA() doesn't work on all RTG systems
-        
-        Version 1.0.0
+        Version 1.1.0
 
         With VBCC: vc -c99 Battleship-light-screen.c -o Battleship-light-screen -lamiga -fpu=68881
 
@@ -31,6 +29,7 @@
 #include <intuition/intuition.h>
 #include <graphics/gfx.h>
 #include <graphics/displayinfo.h>
+#include <graphics/modeid.h>
 #include <graphics/view.h>
 #include <graphics/rastport.h>
 #include <graphics/regions.h>
@@ -124,8 +123,8 @@ ULONG penBG = 14;
 UWORD gridMarginX;
 UWORD gridMarginY;
 
-struct TextAttr Topaz12 = { "topaz.font", 12, 0, 0 };
-struct TextAttr Topaz16 = {"topaz.font", 16, 0, 0};
+struct TextAttr Topaz8 = { "topaz.font", 8, 0, 0 };
+struct TextAttr Topaz10 = {"topaz.font", 10, 0, 0};
 struct TextFont *myfont, *myfont2;
 
 struct Gadget    *glist = NULL, *gads[3] = { NULL };
@@ -150,6 +149,24 @@ BOOL shipsPlaced[5] = {FALSE, FALSE, FALSE, FALSE, FALSE};
 
 int AIHits = 0;
 int plyHits = 0;
+
+BOOL IsAGAMode(ULONG modeID)
+{
+    // AGA-tiloissa on yleensä SUPER- tai DOUBLE-bittejä tai MonitorID != DEFAULT_MONITOR_ID (OCS/ECS)
+    ULONG monitorID = modeID & MONITOR_ID_MASK;
+
+    if (monitorID == DEFAULT_MONITOR_ID) {
+        // Tämä on vanha ECS/OCS tila
+        return FALSE;
+    }
+
+    // Vaihtoehtoisesti: jos tilassa on SUPERHIRES tai DOUBLE bittinä, se on vähintään AGA
+    if ((modeID & SUPER_KEY) || (modeID & HIRES_KEY) || (modeID & HIRESLACE_KEY)) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 void startPrg()
 {
@@ -199,7 +216,7 @@ void startPrg()
         static const struct RGB8 pens[] = {
             {180, 180, 200}, // 0
             {0,0,0}, // 1 text color in gadgets
-            {210,210,210}, // gadget border light
+            {210,210,210}, // 2 gadget border light
             {237, 119, 255}, // 3 - penPink
             {254, 204, 253}, // 4 - penLightPink
             { 52, 100, 208}, // 5 - penBlue
@@ -211,7 +228,7 @@ void startPrg()
             { 97, 255, 254}, // 11 - penTitle
             {218, 248, 246}, // 12 - penTitleTxt
             {218, 220, 220}, // 13 - penGrid
-            {102, 120, 200}, // 14 - penBG
+            {90, 140, 210}, // 14 - penBG
             {180, 180, 200} // 15
         };
         
@@ -223,6 +240,9 @@ void startPrg()
             SetRGB32CM(cm, i, TO32(r4), TO32(g4), TO32(b4));
         }
         
+        MakeScreen(scr);
+        RethinkDisplay();
+    
         srand(time(NULL));
 
         if ( (vi = GetVisualInfo(scr, TAG_END)) != NULL )
@@ -234,34 +254,34 @@ void startPrg()
             gad = CreateContext(&glist);
 
             /* gadgets */
-            ng.ng_TextAttr   = &Topaz12;
+            ng.ng_TextAttr   = &Topaz8;
             ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+24*16+32;
-            ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 100;
-            ng.ng_Height     = 36;
+            ng.ng_LeftEdge   = MARGIN+24*16 + 8;
+            ng.ng_TopEdge    = MARGIN+24*16 + 8 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 90;
+            ng.ng_Height     = 27;
             ng.ng_GadgetText = "PLAY";
             ng.ng_GadgetID   = PLAY_BUTTON;
             ng.ng_Flags      = 0;
             gads[PLAY_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
-            ng.ng_TextAttr   = &Topaz12;
+            ng.ng_TextAttr   = &Topaz8;
             ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+32;
-            ng.ng_TopEdge    = MARGIN+24*16+32 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 120;
-            ng.ng_Height     = 36;
+            ng.ng_LeftEdge   = MARGIN;
+            ng.ng_TopEdge    = MARGIN+24*16 + 8 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 110;
+            ng.ng_Height     = 27;
             ng.ng_GadgetText = "Undo ship";
             ng.ng_GadgetID   = UNDO_BUTTON;
             ng.ng_Flags      = 0;
             gads[UNDO_BUTTON] = gad = CreateGadget(BUTTON_KIND, gad, &ng, TAG_END);
 
-            ng.ng_TextAttr   = &Topaz12;
+            ng.ng_TextAttr   = &Topaz8;
             ng.ng_VisualInfo = vi;
-            ng.ng_LeftEdge   = MARGIN+24*16+32;
-            ng.ng_TopEdge    = MARGIN+24*16+32+36+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
-            ng.ng_Width      = 120;
-            ng.ng_Height     = 36;
+            ng.ng_LeftEdge   = MARGIN+24*16 + 8;
+            ng.ng_TopEdge    = MARGIN+24*16+30+20 + scr->WBorTop + (scr->Font->ta_YSize + 1);
+            ng.ng_Width      = 110;
+            ng.ng_Height     = 27;
             ng.ng_GadgetText = "New game";
             ng.ng_GadgetID   = NEWGAME_BUTTON;
             ng.ng_Flags      = 0;
@@ -270,11 +290,11 @@ void startPrg()
             if (gad != NULL) {
                 
                     win = OpenWindowTags (NULL,
-                        WA_Title, "Battle Ship game for AmigaOS 3 - most RTG boards compatible",
+                        WA_Title, "Battle Ship game for AmigaOS 3 - AGA version",
                         WA_Top, 0,
                         WA_Left, 0,
                         WA_InnerWidth, 600,
-                        WA_InnerHeight, 600,
+                        WA_InnerHeight, 512,
                         WA_ReportMouse, TRUE,
                         WA_RMBTrap, TRUE,
                         WA_Gadgets, NULL,
@@ -297,8 +317,8 @@ void startPrg()
                         gridMarginX = MARGIN + win->BorderLeft;
                         gridMarginY = MARGIN + win->BorderTop;
                                                 
-                        myfont = (struct TextFont*)OpenFont(&Topaz16);
-                        myfont2 = (struct TextFont*)OpenFont(&Topaz12);
+                        myfont = (struct TextFont*)OpenFont(&Topaz10);
+                        myfont2 = (struct TextFont*)OpenFont(&Topaz8);
                         SetDrMd(rastport,0);
                         
                         struct Gadget *gadEvent;
@@ -313,7 +333,7 @@ void startPrg()
                         int bx, by, mx, my, pmx, pmy, fillWidth, fillHeight, bpmx, bpmy;
 
                         state = START_SCREEN;
-                                              
+                         
                         SetAPen(rastport, penBG);
                         RectFill(rastport,win->BorderLeft,win->BorderTop,600+win->BorderLeft,600+win->BorderTop);   
                         
@@ -341,13 +361,13 @@ void startPrg()
 
                                 SetAPen(rastport, penTitle);
                                 SetFont(rastport, myfont);
-                                Move(rastport, (600-TextLength(rastport, "Battle ship game", 16)) / 2, win->BorderTop+MARGIN + borderTop);
-                                Text(rastport, "Battle ship game", 16);
+                                Move(rastport, (600-TextLength(rastport, "Battle ship - game", 18)) / 2, win->BorderTop+MARGIN + borderTop);
+                                Text(rastport, "Battle ship - game", 18);
 
                                 SetFont(rastport, myfont2);
                                 SetAPen(rastport, penTitleTxt);
-                                Move(rastport, (600-TextLength(rastport, "Version 1.0.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
-                                Text(rastport, "Version 1.0.0", 13);
+                                Move(rastport, (600-TextLength(rastport, "Version 1.1.0", 13)) / 2, win->BorderTop+MARGIN + 40) + borderTop;
+                                Text(rastport, "Version 1.1.0", 13);
 
                                 Move(rastport, (600-TextLength(rastport, "Click anywhere in the window to continue", 40)) / 2, win->BorderTop+MARGIN + 40 + 80 + borderTop);
                                 Text(rastport, "Click anywhere in the window to continue", 40);
@@ -364,7 +384,7 @@ void startPrg()
                             if (state == PLACE_SHIPS) {
                                 SetAPen(rastport, penLightPinkTxt);
                                 SetFont(rastport, myfont);
-                                Move(rastport, 24, MARGIN + 24*16+128 + win->BorderTop + rastport->TxBaseline);
+                                Move(rastport, MARGIN, MARGIN + 24*16+70 + win->BorderTop + rastport->TxBaseline);
                                 Text(rastport, "Positioning of ships", 20);
                             }
                             
@@ -372,11 +392,12 @@ void startPrg()
                                 
                                 state = GAME_OVER;
                                                 WaitBlit();
-                                                                                                
+                                                
+                                                // text area              
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + MARGIN + 50;
-                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = gridMarginY + 384 + 70 + 170;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 4;
+                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN - 2;
+                                                rect.MaxY = 506;
                                                                                                 
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
@@ -395,13 +416,13 @@ void startPrg()
                                                 // clear "Game on!" text
                                                 SetAPen(rastport, penBG);
                                                 RectFill(rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+52,
-                                                    win->BorderLeft+500, gridMarginY + 384 + 70 + 168);
+                                                    MARGIN + win->BorderLeft + 130, win->BorderTop + MARGIN+24*16+6,
+                                                    MARGIN + win->BorderLeft+ 270, gridMarginY + 384 + 10+26);
                                 
                                                 
                                                 
                                                SetFont(rastport, myfont);
-                                               Move(rastport, gridMarginX + 32, gridMarginY + 24*16+140);
+                                               Move(rastport, gridMarginX + 32 + 18 + 70, gridMarginY + 24*16+20);
 
                                                if (AIHits == 23) {
                                                     SetAPen(rastport, penLightPinkTxt);
@@ -435,6 +456,7 @@ void startPrg()
                                 
                                 switch(cls)
                                 {
+                                        
                                     case IDCMP_REFRESHWINDOW:
     
                                         GT_RefreshWindow(win, NULL);
@@ -474,13 +496,14 @@ void startPrg()
                                                     win->BorderLeft + 384+24, win->BorderTop + MARGIN+24*16+MARGIN+100);
                                                 */
                                                 state = PLAY;
-                                                    
+                        
                                                 WaitBlit();
                                                 
+                                                // text area                        
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384;
-                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + MARGIN + 384 + 180;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 4;
+                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN - 2;
+                                                rect.MaxY = 506;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -495,27 +518,27 @@ void startPrg()
                                                 SetAPen(rastport, penBG);
                                                 RectFill(
                                                     rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+70,
-                                                    win->BorderLeft + 400, win->BorderTop + MARGIN+24*16+70 + 120);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+38,
+                                                    win->BorderLeft + 360, 506);
                                                 
                                                 
                                                 SetFont(rastport, myfont2);
                                 
                                                 SetAPen(rastport, penBlue);
-                                                RectFill(rastport, 24, MARGIN + 24*16+90-8 + 24, 24+24, MARGIN + 24*16+90+24-8 + 24);
+                                                RectFill(rastport, MARGIN, MARGIN + 24*16+48, MARGIN+22, MARGIN + 24*16+48 + 22);
                                                 SetAPen(rastport, penLightPinkTxt);
-                                                Move(rastport, 24+42, MARGIN + 24*16+90+24+8);
+                                                Move(rastport, MARGIN + 29, MARGIN + 24*16+59);
                                                 Text(rastport, "Human player has hit AI's ship", 30);
 
                                                 SetAPen(rastport, penLightBlue);
-                                                RectFill(rastport, 24, MARGIN + 24*16+110 + 24 + 8, 24+24, MARGIN + 24*16+110+24 + 24 + 8);
+                                                RectFill(rastport, MARGIN, MARGIN + 24*16+55 + 22, MARGIN+24, MARGIN + 24*16+55 + 22 + 22);
                                                 SetAPen(rastport, penLightPinkTxt);
-                                                Move(rastport, 24+42, MARGIN + 24*16+110+16+24+8);
+                                                Move(rastport, MARGIN+29, MARGIN + 24*16+59+22+6);
                                                 Text(rastport, "Human player has missed AI's ship", 33);
                                 
                                                 SetFont(rastport, myfont);
                                                 SetAPen(rastport, penLightPinkTxt);
-                                                Move(rastport, 220, MARGIN + 24*16+128+40 + win->BorderTop);
+                                                Move(rastport, MARGIN + 140, MARGIN + 24*16+20 + win->BorderTop);
                                                 Text(rastport, "Game on!", 8);
                                                 
                                                 WaitBlit();
@@ -572,10 +595,11 @@ void startPrg()
                                                 
                                                 WaitBlit();
                                                 
+                                                // text area              
                                                 rect.MinX = win->BorderLeft + 1;
-                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 70;
-                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN;
-                                                rect.MaxY = win->BorderTop + 1 + 24*16+MARGIN+180;
+                                                rect.MinY = win->BorderTop + 1 + MARGIN + 384 + 4;
+                                                rect.MaxX = win->BorderLeft + 1 + 384 + MARGIN - 2;
+                                                rect.MaxY = 506;
                                                 
                                                 if ((newRegion = (struct Region *) NewRegion())) {
                                                     OrRectRegion(newRegion, &rect);
@@ -588,13 +612,16 @@ void startPrg()
                                                 }
                                                 
                                                 SetAPen(rastport, penBG);
+                                                RectFill(rastport, MARGIN + win->BorderLeft + 118, MARGIN+384+5, MARGIN + win->BorderLeft + 378, win->BorderTop + MARGIN + 384+36);
+
+                                                SetAPen(rastport, penBG);
                                                 RectFill(rastport,
-                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+60,
-                                                    win->BorderLeft+400, win->BorderTop + MARGIN+24*16+170);
+                                                    win->BorderLeft, win->BorderTop + MARGIN+24*16+36,
+                                                    win->BorderLeft+360 + MARGIN, 506);
                                                 
                                                 SetAPen(rastport, penLightPinkTxt);
                                                 SetFont(rastport, myfont);
-                                                Move(rastport, 24, MARGIN + 24*16+128 + win->BorderTop + rastport->TxBaseline);
+                                                Move(rastport, MARGIN, MARGIN + 24*16+70 + win->BorderTop + rastport->TxBaseline);
                                                 Text(rastport, "Positioning of ships", 20);
                                 
                                                 // playing area
@@ -687,7 +714,7 @@ void startPrg()
                                                 RectFill(
                                                 rastport,
                                                 win->BorderLeft, win->BorderTop,
-                                                win->BorderLeft + 500, win->BorderTop + 550);
+                                                win->BorderLeft + 500, win->BorderTop + 506);
                                             
 
                                                 AddGList(win, glist, 0, -1, NULL);
@@ -1145,7 +1172,7 @@ void startPrg()
                 w = diminfo.Nominal.MaxX - diminfo.Nominal.MinX + 1;
                 h = diminfo.Nominal.MaxY - diminfo.Nominal.MinY + 1;
                 
-                if (w > 600 && h > 600) {
+                if (w > 600 && h >= 512 && IsAGAMode(displayID)) {
                     printf("Found modeID 0x%lx: %lux%lu\n", displayID, w, h);
                     modeID = displayID;
                     screenWidth = w;
