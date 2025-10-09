@@ -22,6 +22,8 @@ The function looks from the system best fit for given RGB codes, so now hopefull
 
 For some reason, in all the different Amiga systems I've tested the game, the colors are OK, if not started from icon.
 
+IMPORTANT! In some Amiga RTG systems OS call ObtainBestPenA() doesn't work. This is why also a version with own screen now exists.
+
 ## There's a light version, too
 
 I have added a light version of the game, that might work better than the heavier version. The inner size of the window in the light version is 600x600 pixels and there is only a title picture (that doesn't show up, if the game is started from icon) that is embedded in C code, only 1 bitplane.
