@@ -22,7 +22,7 @@ The function looks from the system best fit for given RGB codes, so now hopefull
 
 For some reason, in all the different Amiga systems I've tested the game, the colors are OK, if not started from icon.
 
-IMPORTANT! In some Amiga RTG systems OS call ObtainBestPenA() doesn't work. This is why also a version with own screen now exists.
+IMPORTANT! In some Amiga RTG systems OS call ObtainBestPenA() doesn't work. This is why also an AGA version with own screen now exists.
 
 ## There's a light version, too
 
