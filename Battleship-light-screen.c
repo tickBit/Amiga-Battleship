@@ -62,6 +62,8 @@
 
 #define SCR_DEPTH       4
 
+#define TO32(x) ((x) * 0x01010101UL)
+
 int state;
 
 struct Library *IntuitionBase = NULL;
@@ -108,7 +110,7 @@ ULONG penPink = 3;          // (237,119,255)
 ULONG penLightPink = 4;     // (254,204,253)
 ULONG penBlue = 5;          // (52,100,208)
 ULONG penLightBlue = 6;     // (102,203,255)
-ULONG penWhite = 7;         // (237,255,255)
+ULONG penWhite = 7;         // (255,255,255)
 ULONG penPinkHit = 8;       // (204,136,255)
 ULONG penLightPinkTxt = 9;  // (254,240,255)
 ULONG penLightBlueTxt = 10;  // (99,206,255)
@@ -187,9 +189,9 @@ void startPrg()
             return FALSE;
         }
         
-        struct ViewPort *vp = &scr->ViewPort;
-        if (!vp) {
-            printf("Could not get screen's viewport\n");
+        struct ColorMap *cm = scr->ViewPort.ColorMap;
+        if (!cm) {
+            printf("Could not get screen's viewport's colormap\n");
             CloseScreen(scr);
             return;
         }
@@ -202,7 +204,7 @@ void startPrg()
             {254, 204, 253}, // 4 - penLightPink
             { 52, 100, 208}, // 5 - penBlue
             {102, 203, 255}, // 6 - penLightBlue
-            {237, 255, 255}, // 7 - penWhite
+            {255, 255, 255}, // 7 - penWhite
             {204, 136, 255}, // 8 - penPinkHit
             {254, 240, 255}, // 9 - penLightPinkTxt
             { 99, 206, 255}, // 10 - penLightBlueTxt
@@ -213,12 +215,12 @@ void startPrg()
             {180, 180, 200} // 15
         };
         
-        for (UWORD i = 0; i < (sizeof(pens)/sizeof(pens[0])); i++) {
-            UWORD r4 = (pens[i].r * 15) / 255;
-            UWORD g4 = (pens[i].g * 15) / 255;
-            UWORD b4 = (pens[i].b * 15) / 255;
+        for (ULONG i = 0; i < 16; i++) {
+            ULONG r4 = (pens[i].r);
+            ULONG g4 = (pens[i].g);
+            ULONG b4 = (pens[i].b);
 
-            SetRGB4(vp, i, r4, g4, b4);
+            SetRGB32CM(cm, i, TO32(r4), TO32(g4), TO32(b4));
         }
         
         srand(time(NULL));
