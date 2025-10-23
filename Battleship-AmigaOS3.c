@@ -134,7 +134,7 @@ struct TextAttr Topaz120 = { "topaz.font", 12, 0, 0, };
 struct TextAttr myta = {"CGTimes.font", 72, 0, 0};
 struct TextFont *myfont, *myfont2;
 
-struct Gadget    *glist, *gads[3];
+struct Gadget    *glist = NULL, *gads[3] = { NULL };
 struct NewGadget ng;
 void             *vi;
 
@@ -822,7 +822,7 @@ void startPrg()
                                                 0xC0);
                                             
 
-                                                AddGList(win, &glist, 0, -1, NULL);
+                                                AddGList(win, glist, 0, -1, NULL);
                                                 RefreshGList(win->FirstGadget, win, NULL, -1);
 
                                                 state = PLACE_SHIPS;
@@ -1243,9 +1243,21 @@ void startPrg()
             FreeGadgets(glist);
 
         }
-            
-                
     
+            
+    ReleasePen(scr->ViewPort.ColorMap, penPink);
+    ReleasePen(scr->ViewPort.ColorMap, penPink);
+    ReleasePen(scr->ViewPort.ColorMap, penLightPink);
+    ReleasePen(scr->ViewPort.ColorMap, penBlue);
+    ReleasePen(scr->ViewPort.ColorMap, penLightBlue);
+    ReleasePen(scr->ViewPort.ColorMap, penWhite);
+    ReleasePen(scr->ViewPort.ColorMap, penPinkHit);
+    ReleasePen(scr->ViewPort.ColorMap, penLightPinkTxt);
+    ReleasePen(scr->ViewPort.ColorMap, penLightBlueTxt);
+    ReleasePen(scr->ViewPort.ColorMap, penTitle);
+    ReleasePen(scr->ViewPort.ColorMap, penTitleTxt);
+    ReleasePen(scr->ViewPort.ColorMap, penGrid);
+
     FreeVisualInfo(vi);
     UnlockPubScreen(NULL, scr);
 
@@ -1264,13 +1276,15 @@ void startPrg()
         
         if (!DataTypesBase || ! IntuitionBase || !GfxBase || !UtilityBase || !LayersBase || !GadToolsBase || !DiskfontBase) {
             
-            if (DataTypesBase) CloseLibrary(DataTypesBase); else printf("datatypes.library version 39 not found\n");
-            if (IntuitionBase) CloseLibrary(IntuitionBase); else printf("intuition.library version 39 not found\n");
-            if (GfxBase) CloseLibrary(GfxBase); else printf("graphics.library version 39 not found\n");
-            if (UtilityBase) CloseLibrary(UtilityBase); else printf("utility.library version 39 not found\n");
-            if (LayersBase) CloseLibrary(LayersBase); else printf("layers.library version 39 not found\n");
-            if (GadToolsBase) CloseLibrary(GadToolsBase); else printf("gadtools.library version 39 not found\n");
-            if (DiskfontBase) CloseLibrary(DiskfontBase); else printf("diskfont.library version 39 not found\n");
+            if (DataTypesBase) CloseLibrary(DataTypesBase); else printf("datatypes.library version 39 or newer not found\n");
+            if (IntuitionBase) CloseLibrary(IntuitionBase); else printf("intuition.library version 39 or newer not found\n");
+            if (GfxBase) CloseLibrary(GfxBase); else printf("graphics.library version 39 or newer not found\n");
+            if (UtilityBase) CloseLibrary(UtilityBase); else printf("utility.library version 39 or newer not found\n");
+            if (LayersBase) CloseLibrary(LayersBase); else printf("layers.library version 39 or newer not found\n");
+            if (GadToolsBase) CloseLibrary(GadToolsBase); else printf("gadtools.library version 39 or newer not found\n");
+            if (DiskfontBase) CloseLibrary(DiskfontBase); else printf("diskfont.library version 39 or newer not found\n");
+            
+            cleanup();
             
             return -1;
         }
@@ -1285,13 +1299,13 @@ void startPrg()
 
 int cleanup() {
 
-        CloseLibrary(DataTypesBase);
-        CloseLibrary(IntuitionBase);
-        CloseLibrary(UtilityBase);
-        CloseLibrary(GfxBase);
-        CloseLibrary(DiskfontBase);
-        CloseLibrary(GadToolsBase);
-        CloseLibrary(LayersBase);
+        if (DataTypesBase) CloseLibrary(DataTypesBase);
+        if (IntuitionBase) CloseLibrary(IntuitionBase);
+        if (UtilityBase) CloseLibrary(UtilityBase);
+        if (GfxBase) CloseLibrary(GfxBase);
+        if (DiskfontBase) CloseLibrary(DiskfontBase);
+        if (GadToolsBase) CloseLibrary(GadToolsBase);
+        if (LayersBase) CloseLibrary(LayersBase);
         
         return;
 
